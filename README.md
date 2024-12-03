@@ -27,7 +27,7 @@ aims to enhance the quality of life and overall well-being of children on the au
 
 
 Dependencies
-  Mediapipe
-  Sklearn
-  tensorflow 
+Mediapipe
+Sklearn
+tensorflow 
 
