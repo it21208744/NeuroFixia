@@ -26,8 +26,8 @@ outcomes for each child. By combining technology with targeted interventions, th
 aims to enhance the quality of life and overall well-being of children on the autism spectrum.
 
 
-Dependencies
-Mediapipe
-Sklearn
-tensorflow 
+Dependencies - 
+/ Mediapipe
+/ Sklearn
+/ tensorflow 
 
