@@ -1,6 +1,7 @@
 # NeuroFixia
 
-![image](https://github.com/user-attachments/assets/260086df-0801-45d5-bb1c-b560326a3577)
+![Overall diagram drawio](https://github.com/user-attachments/assets/f65d62d3-d001-4dc6-bc31-c6c9f81b1f8e)
+
 The proposed solution is a comprehensive system designed to identify and improve outcomes 
 for children with Autism Spectrum Disorder (ASD) by integrating advanced technology with 
 tailored interventions. The system focuses on four key areas: Behavioral Observation, Social 
