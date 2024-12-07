@@ -1,6 +1,6 @@
 # NeuroFixia
 
-![Overall diagram](https://github.com/user-attachments/assets/eb058d41-8a97-44b1-b487-ca885c213147)
+![Overall diagram](https://github.com/user-attachments/assets/0593fc41-9f76-4b20-a1a9-08522e62adcd)
 
 image link - https://drive.google.com/file/d/1Xg3KBgi8hnE7NGpsS26itPCp0x-fh9Y0/view?usp=sharing
 
