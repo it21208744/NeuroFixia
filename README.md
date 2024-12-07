@@ -1,34 +1,12 @@
 # NeuroFixia
 
-![Overall diagram drawio](https://github.com/user-attachments/assets/f65d62d3-d001-4dc6-bc31-c6c9f81b1f8e)
+![Overall diagram](https://github.com/user-attachments/assets/ba5b3fc3-f8c7-4c65-9853-c6fa972bce52)
 
-The proposed solution is a comprehensive system designed to identify and improve outcomes 
-for children with Autism Spectrum Disorder (ASD) by integrating advanced technology with 
-tailored interventions. The system focuses on four key areas: Behavioral Observation, Social 
-Skills Observation, Sensory Processing Observation, and Learning Abilities Observation.
-1. Behavioral Observation: Diagnose autism in real-time using eye-tracking technology to 
-monitor and analyze children's behaviors, such as eye contact and the ability to identify facial 
-expressions. Also, focus on behavioral aspects like repetitive head and hand movements, 
-providing a risk assessment of autism based on predictive models.
-2. Social Skills Observation: Implement a questionnaire-based approach targeting 
-parents to gather data on children's social interactions and responsiveness, and activities for 
-children which are then analyzed to predict autism risk and suggest activities which help to 
-improve those social skills struggled by the child.
-3. Sensory Processing Observation: Measures children's sensory responses to specific 
-stimuli, such as lights and sounds, colors, touch, temperature smells and tastes to identify 
-autism-related sensitivities. This data is used to train models that assess autism risk.
-4. Learning Abilities Observation: Assesses children's educational and cognitive skills 
-through structured tasks and evaluations, such as attention span, memory recall, and flexible 
-thinking. The collected data is analyzed to identify specific learning challenges and predict the 
-likelihood of autism
-The system integrates these observations into a holistic framework that not only identifies 
-autism but also proposes personalized activities aimed at improving the developmental 
-outcomes for each child. By combining technology with targeted interventions, the solution 
-aims to enhance the quality of life and overall well-being of children on the autism spectrum.
+The system depicted in the diagram is designed to assist in the early identification and intervention of autism-related impairments in children. Parents and children provide input data, such as eye-tracking, body movement, activity results, video recordings, and responses. This data is processed through an API (REST API), then undergoes preprocessing, including feature extraction and labeling . The system uses machine learning models to identify impairments and assess risk levels based on sensory processing differences, facial expression analysis (using TensorFlow), cognitive aspects like attention, memory, and logical thinking , as well as parental questionnaire response analysis (using NLP and federated learning). Based on these assessments, the system recommends consulting with a medical professional for further evaluation. And the system provides a range of improvement activities that parents can choose to guide their child through, should they wish to do so. These activities are continually tracked and monitored (using a SQLite database), ensuring that the child's progress is effectively observed. The approach leverages advanced technologies to create a comprehensive, personalized plan for each child, providing ongoing support to parents in their efforts to enhance their child's development
 
 
 Dependencies - 
-/ Mediapipe
-/ Sklearn
-/ tensorflow 
+- Mediapipe
+- tensorflow
+- Sklearn
 
