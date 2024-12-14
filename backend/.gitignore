@@ -1,0 +1,50 @@
+# Node modules
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+.env
+
+# Logs and reports from crash
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Optional npm cache directory
+.npm/
+
+# Optional REPL history
+.node_repl_history
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# IDE/editor config files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# Mac OS files
+._*
+
+# Coverage directory
+coverage/
+
+# Production build files (optional, if applicable)
+build/
+dist/
+
+# Miscellaneous
+*.log
+*.out
+*.lock
+
+# Temporary files
+*.tmp
+*.temp
