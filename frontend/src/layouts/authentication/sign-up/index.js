@@ -20,19 +20,70 @@ import { Link } from "react-router-dom";
 import Card from "@mui/material/Card";
 import Checkbox from "@mui/material/Checkbox";
 
+// React hooks
+import { useState } from "react";
+
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
+import MDSnackbar from "components/MDSnackbar";
 
 // Authentication layout components
 import CoverLayout from "layouts/authentication/components/CoverLayout";
 
 // Images
 import bgImage from "assets/images/bg-sign-up-cover.jpeg";
+import { registerUser } from "api/auth";
 
 function Cover() {
+  // State for form inputs
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [currentTime, setCurrentTime] = useState("");
+  const [successSB, setSuccessSB] = useState(false);
+
+  function getCurrentTime() {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const seconds = now.getSeconds().toString().padStart(2, "0");
+
+    return `${hours}:${minutes}:${seconds}`;
+  }
+
+  // Handle form submission
+  const handleSignUp = () => {
+    registerUser({ name, email, password })
+      .then((res) => {
+        if (res.status == "201") {
+          setCurrentTime(getCurrentTime);
+          openSuccessSB();
+          return console.log({ message: "User registered" });
+        }
+        console.log(res.response.data);
+      })
+      .catch((err) => console.log(err.response.data));
+  };
+  const openSuccessSB = () => setSuccessSB(true);
+  const closeSuccessSB = () => setSuccessSB(false);
+
+  const renderSuccessSB = (
+    <MDSnackbar
+      color="success"
+      icon="check"
+      title="Success"
+      content="User registered"
+      dateTime={currentTime}
+      open={successSB}
+      onClose={closeSuccessSB}
+      close={closeSuccessSB}
+      bgWhite
+    />
+  );
+
   return (
     <CoverLayout image={bgImage}>
       <Card>
@@ -57,13 +108,34 @@ function Cover() {
         <MDBox pt={4} pb={3} px={3}>
           <MDBox component="form" role="form">
             <MDBox mb={2}>
-              <MDInput type="text" label="Name" variant="standard" fullWidth />
+              <MDInput
+                type="text"
+                label="Name"
+                variant="standard"
+                fullWidth
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </MDBox>
             <MDBox mb={2}>
-              <MDInput type="email" label="Email" variant="standard" fullWidth />
+              <MDInput
+                type="email"
+                label="Email"
+                variant="standard"
+                fullWidth
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </MDBox>
             <MDBox mb={2}>
-              <MDInput type="password" label="Password" variant="standard" fullWidth />
+              <MDInput
+                type="password"
+                label="Password"
+                variant="standard"
+                fullWidth
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </MDBox>
             <MDBox display="flex" alignItems="center" ml={-1}>
               <Checkbox />
@@ -87,9 +159,10 @@ function Cover() {
               </MDTypography>
             </MDBox>
             <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth>
-                sign in
+              <MDButton variant="gradient" color="info" fullWidth onClick={handleSignUp}>
+                sign up
               </MDButton>
+              {renderSuccessSB}
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">
               <MDTypography variant="button" color="text">
