@@ -43,6 +43,8 @@ function Cover() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [currentTime, setCurrentTime] = useState("");
+  const [errMsg, setErrMsg] = useState("");
+  const [err, setErr] = useState(false);
   const [successSB, setSuccessSB] = useState(false);
 
   function getCurrentTime() {
@@ -58,24 +60,29 @@ function Cover() {
   const handleSignUp = () => {
     registerUser({ name, email, password })
       .then((res) => {
+        setCurrentTime(getCurrentTime);
         if (res.status == "201") {
-          setCurrentTime(getCurrentTime);
-          openSuccessSB();
-          return console.log({ message: "User registered" });
+          setErr(false);
+          return openSuccessSB();
         }
-        console.log(res.response.data);
+        setErr(true);
+        setErrMsg(res.response.data.message);
+        openSuccessSB();
       })
-      .catch((err) => console.log(err.response.data));
+      .catch((err) => {
+        setErr(true);
+        setErrMsg(err.response.data.message);
+      });
   };
   const openSuccessSB = () => setSuccessSB(true);
   const closeSuccessSB = () => setSuccessSB(false);
 
   const renderSuccessSB = (
     <MDSnackbar
-      color="success"
+      color={err != true ? "success" : "error"}
       icon="check"
-      title="Success"
-      content="User registered"
+      title={err != true ? "Success" : "Error"}
+      content={err != true ? "User registered" : errMsg}
       dateTime={currentTime}
       open={successSB}
       onClose={closeSuccessSB}
