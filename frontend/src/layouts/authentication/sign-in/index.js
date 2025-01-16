@@ -16,7 +16,7 @@ Coded by www.creative-tim.com
 import { useState } from "react";
 
 // react-router-dom components
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 // @mui material components
 import Card from "@mui/material/Card";
@@ -41,34 +41,69 @@ import BasicLayout from "layouts/authentication/components/BasicLayout";
 // Images
 import bgImage from "assets/images/bg-sign-in-basic.jpeg";
 import { loginUser } from "api/auth";
+import MDSnackbar from "components/MDSnackbar";
 
 function Basic() {
+  const navigate = useNavigate();
   const [rememberMe, setRememberMe] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [currentTime, setCurrentTime] = useState("");
+  const [errMsg, setErrMsg] = useState("");
+  const [err, setErr] = useState(false);
+  const [successSB, setSuccessSB] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(false);
+  const openSuccessSB = () => setSuccessSB(true);
+  const closeSuccessSB = () => setSuccessSB(false);
+
+  function getCurrentTime() {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const seconds = now.getSeconds().toString().padStart(2, "0");
+
+    return `${hours}:${minutes}:${seconds}`;
+  }
 
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
 
   const handleSignIn = async () => {
+    setIsDisabled(true);
     const data = { email: email, password: password };
     loginUser(data)
       .then((res) => {
-        // setCurrentTime(getCurrentTime);
+        setCurrentTime(getCurrentTime);
         if (res.status == "200") {
-          return console.log(res);
-          // setErr(false);
-          // return openSuccessSB();
+          setErr(false);
+          // openSuccessSB();
+          return setTimeout(() => {
+            navigate("/dashboard");
+          }, 2000);
         }
-        console.log(res);
-        // setErr(true);
-        // setErrMsg(res.response.data.message);
-        // openSuccessSB();
+        setIsDisabled(false);
+        setErr(true);
+        setErrMsg(res.response.data.message);
+        openSuccessSB();
       })
       .catch((err) => {
-        // setErr(true);
-        // setErrMsg(err.response.data.message);
+        setErr(true);
+        setErrMsg(err.response.data.message);
       });
   };
+
+  const renderSuccessSB = (
+    <MDSnackbar
+      color={err != true ? "success" : "error"}
+      icon="check"
+      title={err != true ? "Success" : "Error"}
+      content={err != true ? "User registered" : errMsg}
+      dateTime={currentTime}
+      open={successSB}
+      onClose={closeSuccessSB}
+      close={closeSuccessSB}
+      bgWhite
+    />
+  );
 
   return (
     <BasicLayout image={bgImage}>
@@ -138,9 +173,16 @@ function Basic() {
               </MDTypography>
             </MDBox>
             <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth onClick={handleSignIn}>
+              <MDButton
+                variant="gradient"
+                color="info"
+                fullWidth
+                onClick={handleSignIn}
+                disabled={isDisabled}
+              >
                 sign in
               </MDButton>
+              {renderSuccessSB}
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">
               <MDTypography variant="button" color="text">
