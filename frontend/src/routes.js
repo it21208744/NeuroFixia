@@ -61,6 +61,40 @@ const routes = [
     route: "/dashboard",
     component: <Dashboard />,
   },
+  //temporary-------------------------------
+  {
+    type: "collapse",
+    name: "Behavioral ",
+    key: "behavioral",
+    icon: <Icon fontSize="small">assignment</Icon>,
+    route: "/behavioral",
+    component: <Behavioral />,
+  },
+  {
+    type: "collapse",
+    name: "Social Skills ",
+    key: "social",
+    icon: <Icon fontSize="small">assignment</Icon>,
+    route: "social",
+    component: <Social />,
+  },
+  {
+    type: "collapse",
+    name: "Sensory Processing ",
+    key: "sensory",
+    icon: <Icon fontSize="small">assignment</Icon>,
+    route: "sensory",
+    component: <Sensory />,
+  },
+  {
+    type: "collapse",
+    name: "Learning Abilities ",
+    key: "learning",
+    icon: <Icon fontSize="small">assignment</Icon>,
+    route: "learning",
+    component: <Learning />,
+  },
+  //temporary-------------------------------
   {
     type: "collapse",
     name: "Tables",
@@ -79,14 +113,6 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "RTL",
-    key: "rtl",
-    icon: <Icon fontSize="small">format_textdirection_r_to_l</Icon>,
-    route: "/rtl",
-    component: <RTL />,
-  },
-  {
-    type: "collapse",
     name: "Notifications",
     key: "notifications",
     icon: <Icon fontSize="small">notifications</Icon>,
@@ -102,7 +128,7 @@ const routes = [
     component: <Profile />,
   },
   {
-    type: "collapse",
+    type: "title",
     name: "Sign In",
     key: "sign-in",
     icon: <Icon fontSize="small">login</Icon>,
@@ -110,46 +136,20 @@ const routes = [
     component: <SignIn />,
   },
   {
-    type: "collapse",
+    type: "title",
     name: "Sign Up",
     key: "sign-up",
     icon: <Icon fontSize="small">assignment</Icon>,
     route: "/authentication/sign-up",
     component: <SignUp />,
   },
-
-  //temporary-------------------------------
   {
-    type: "collapse",
-    name: "Behavioral Observation",
-    key: "behavioral",
-    icon: <Icon fontSize="small">assignment</Icon>,
-    route: "/behavioral",
-    component: <Behavioral />,
-  },
-  {
-    type: "collapse",
-    name: "Social Skills Observation",
-    key: "social",
-    icon: <Icon fontSize="small">assignment</Icon>,
-    route: "social",
-    component: <Social />,
-  },
-  {
-    type: "collapse",
-    name: "Sensory Processing Observation",
-    key: "sensory",
-    icon: <Icon fontSize="small">assignment</Icon>,
-    route: "sensory",
-    component: <Sensory />,
-  },
-  {
-    type: "collapse",
-    name: "Learning Abilities Observation",
-    key: "learning",
-    icon: <Icon fontSize="small">assignment</Icon>,
-    route: "learning",
-    component: <Learning />,
+    type: "title",
+    name: "RTL",
+    key: "rtl",
+    icon: <Icon fontSize="small">format_textdirection_r_to_l</Icon>,
+    route: "/rtl",
+    component: <RTL />,
   },
 ];
 
