@@ -44,6 +44,10 @@ import Notifications from "layouts/notifications";
 import Profile from "layouts/profile";
 import SignIn from "layouts/authentication/sign-in";
 import SignUp from "layouts/authentication/sign-up";
+import Behavioral from "layouts/Behavioral";
+import Learning from "layouts/Learning";
+import Sensory from "layouts/Sensory";
+import Social from "layouts/Social";
 
 // @mui icons
 import Icon from "@mui/material/Icon";
@@ -112,6 +116,40 @@ const routes = [
     icon: <Icon fontSize="small">assignment</Icon>,
     route: "/authentication/sign-up",
     component: <SignUp />,
+  },
+
+  //temporary-------------------------------
+  {
+    type: "collapse",
+    name: "Behavioral Observation",
+    key: "behavioral",
+    icon: <Icon fontSize="small">assignment</Icon>,
+    route: "/behavioral",
+    component: <Behavioral />,
+  },
+  {
+    type: "collapse",
+    name: "Social Skills Observation",
+    key: "social",
+    icon: <Icon fontSize="small">assignment</Icon>,
+    route: "social",
+    component: <Social />,
+  },
+  {
+    type: "collapse",
+    name: "Sensory Processing Observation",
+    key: "sensory",
+    icon: <Icon fontSize="small">assignment</Icon>,
+    route: "sensory",
+    component: <Sensory />,
+  },
+  {
+    type: "collapse",
+    name: "Learning Abilities Observation",
+    key: "learning",
+    icon: <Icon fontSize="small">assignment</Icon>,
+    route: "learning",
+    component: <Learning />,
   },
 ];
 
