@@ -179,6 +179,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
         }
       />
       <List>{renderRoutes}</List>
+      {console.log(renderRoutes)}
       <MDBox p={2} mt="auto">
         <MDButton
           component="a"
