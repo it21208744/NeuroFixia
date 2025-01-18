@@ -42,6 +42,8 @@ import BasicLayout from "layouts/authentication/components/BasicLayout";
 import bgImage from "assets/images/bg-sign-in-basic.jpeg";
 import { loginUser } from "api/auth";
 import MDSnackbar from "components/MDSnackbar";
+import { storeData } from "utils/localStorage";
+import { AUTH_KEYS } from "constants/auth";
 
 function Basic() {
   const navigate = useNavigate();
@@ -74,8 +76,9 @@ function Basic() {
       .then((res) => {
         setCurrentTime(getCurrentTime);
         if (res.status == "200") {
+          storeData(AUTH_KEYS.LOGIN_TIME, res.data.loginTime);
+          storeData(AUTH_KEYS.ACCESS_TOKEN, res.data.token);
           setErr(false);
-          // openSuccessSB();
           return setTimeout(() => {
             navigate("/dashboard");
           }, 2000);
