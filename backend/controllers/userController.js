@@ -55,11 +55,13 @@ const loginUser = async (req, res) => {
   const user = await User.findOne({ email })
 
   if (user && (await bcrypt.compare(password, user.password))) {
+    const loginTime = new Date().toISOString()
     res.json({
       _id: user.id,
       name: user.name,
       email: user.email,
       token: generateToken(user.id),
+      loginTime,
     })
   } else {
     res.status(401).json({ message: 'Invalid credentials' })
