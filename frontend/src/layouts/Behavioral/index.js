@@ -1,61 +1,39 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
-// @mui material components
+import { useEffect, useRef } from "react";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
-
-// Material Dashboard 2 React components
 import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
-
-// Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import Footer from "examples/Footer";
-import DataTable from "examples/Tables/DataTable";
-
-// Data
-import authorsTableData from "layouts/tables/data/authorsTableData";
-import projectsTableData from "layouts/tables/data/projectsTableData";
+import "mui-player/dist/mui-player.min.css";
+import MuiPlayer from "mui-player";
+import video from "assets/behavioral/videos/sad.mp4";
 
 function Tables() {
-  const { columns, rows } = authorsTableData();
-  const { columns: pColumns, rows: pRows } = projectsTableData();
+  const playerRef = useRef(null);
+
+  useEffect(() => {
+    if (playerRef.current) {
+      new MuiPlayer({
+        container: playerRef.current,
+        title: "Behavioral Video",
+        src: video,
+        height: "220px",
+      });
+    }
+  }, []);
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox pt={10} pb={3}>
-        <Card
-          sx={{
-            position: "relative",
-            mt: -8,
-            mx: 3,
-            py: 2,
-            px: 2,
-          }}
-        >
+        <Card sx={{ position: "relative", mt: -8, mx: 3, py: 2, px: 2 }}>
           <Grid container spacing={6}>
             <Grid item xs={12}>
-              sample page for behavioral
+              <div ref={playerRef}></div>
             </Grid>
           </Grid>
         </Card>
       </MDBox>
-      {/* <Footer /> */}
     </DashboardLayout>
   );
 }
