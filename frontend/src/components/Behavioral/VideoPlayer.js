@@ -7,6 +7,7 @@ import video1 from "assets/behavioral/videos/sad.mp4";
 import video2 from "assets/behavioral/videos/angry.mp4";
 import video3 from "assets/behavioral/videos/happy.mp4";
 import video4 from "assets/behavioral/videos/surprised.mp4";
+import FormModal from "./FormModal";
 
 const VideoPlayer = () => {
   const [vidId, setVidId] = useState(0);
@@ -82,6 +83,7 @@ const VideoPlayer = () => {
           >
             <PlayCircleFilledWhiteIcon />
           </MDBox>
+          <FormModal />
         </Grid>
       </Grid>
     </div>
