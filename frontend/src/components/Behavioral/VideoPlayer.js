@@ -1,22 +1,63 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Grid from "@mui/material/Grid";
 import MDBox from "components/MDBox";
 import PlayCircleFilledWhiteIcon from "@mui/icons-material/PlayCircleFilledWhite";
 import MuiPlayer from "mui-player";
-import video from "assets/behavioral/videos/sad.mp4";
+import video1 from "assets/behavioral/videos/sad.mp4";
+import video2 from "assets/behavioral/videos/angry.mp4";
+import video3 from "assets/behavioral/videos/happy.mp4";
+import video4 from "assets/behavioral/videos/surprised.mp4";
 
 const VideoPlayer = () => {
+  const [vidId, setVidId] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [autoPlayStatus, setAutoPlayStatus] = useState(false);
+  const videoList = [video1, video2, video3, video4];
   const playerRef = useRef(null);
+  const videoElementRef = useRef(null);
+
   useEffect(() => {
+    if (vidId === 3) {
+      setAutoPlayStatus(false); // Stop autoplay when last video reaches
+    }
+
     if (playerRef.current) {
-      new MuiPlayer({
+      const player = new MuiPlayer({
         container: playerRef.current,
         title: "Behavioral Video",
-        src: video,
+        src: videoList[vidId % videoList.length], // Ensure looping within bounds
         height: "220px",
+        autoplay: autoPlayStatus, // Enable autoplay based on status
       });
+
+      const videoElement = playerRef.current.querySelector("video");
+      videoElementRef.current = videoElement;
+
+      if (videoElement) {
+        const handleVideoEnd = () => {
+          setVidId((prev) => prev + 1);
+          console.log("hello");
+        };
+
+        videoElement.addEventListener("ended", handleVideoEnd);
+
+        return () => {
+          videoElement.removeEventListener("ended", handleVideoEnd);
+        };
+      }
     }
-  }, []);
+  }, [vidId]); // Re-run when vidId changes
+
+  const handlePlayVideo = () => {
+    if (videoElementRef.current) {
+      setAutoPlayStatus(true);
+      videoElementRef.current
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch((error) => console.log("Play failed:", error));
+    }
+  };
+
   return (
     <div>
       <Grid container spacing={6}>
@@ -37,7 +78,7 @@ const VideoPlayer = () => {
             zIndex={99}
             color="dark"
             sx={{ cursor: "pointer" }}
-            onClick={() => console.log("Start the test")}
+            onClick={handlePlayVideo} // Start video on click
           >
             <PlayCircleFilledWhiteIcon />
           </MDBox>
@@ -46,4 +87,5 @@ const VideoPlayer = () => {
     </div>
   );
 };
+
 export default VideoPlayer;
