@@ -100,6 +100,11 @@ export default function App() {
 
   // Setting the dir attribute for the body element
   useEffect(() => {
+    webgazer
+      .setGazeListener((data, timeStamps) => {
+        console.log(data);
+      })
+      .begin();
     document.body.setAttribute("dir", direction);
   }, [direction]);
 
