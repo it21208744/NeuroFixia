@@ -1,4 +1,5 @@
-import * as React from "react";
+import { useState } from "react";
+import PropTypes from "prop-types";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
@@ -23,17 +24,17 @@ const style = {
   justifyContent: "center",
 };
 
-export default function FormModal() {
-  const [open, setOpen] = React.useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+export default function FormModal({ modalOpen, setModalOpen, handleModalOpen, handleModalClose }) {
+  // const [open, setOpen] = useState(false);
+  // const handleOpen = () => setOpen(true);
+  // const handleClose = () => setOpen(false);
 
   return (
     <div>
-      <Button onClick={handleOpen}>Open modal</Button>
+      <Button onClick={handleModalOpen}>Open modal</Button>
       <Modal
-        open={open}
-        onClose={handleClose}
+        open={modalOpen}
+        onClose={handleModalClose}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
@@ -66,3 +67,10 @@ export default function FormModal() {
     </div>
   );
 }
+
+FormModal.propTypes = {
+  modalOpen: PropTypes.bool.isRequired,
+  setModalOpen: PropTypes.func.isRequired,
+  handleModalOpen: PropTypes.func.isRequired,
+  handleModalClose: PropTypes.func.isRequired,
+};
