@@ -24,7 +24,13 @@ const style = {
   justifyContent: "center",
 };
 
-export default function FormModal({ modalOpen, setModalOpen, handleModalOpen, handleModalClose }) {
+export default function FormModal({
+  modalOpen,
+  setModalOpen,
+  handleModalOpen,
+  handleModalClose,
+  handleNextVideo,
+}) {
   // const [open, setOpen] = useState(false);
   // const handleOpen = () => setOpen(true);
   // const handleClose = () => setOpen(false);
@@ -57,7 +63,7 @@ export default function FormModal({ modalOpen, setModalOpen, handleModalOpen, ha
               {/* <FormControlLabel value="disabled" disabled control={<Radio />} label="other" /> */}
             </RadioGroup>
             <Stack direction="row" justifyContent="center">
-              <Button variant="contained" color="success">
+              <Button variant="contained" color="success" onClick={handleNextVideo}>
                 Next
               </Button>
             </Stack>
@@ -73,4 +79,5 @@ FormModal.propTypes = {
   setModalOpen: PropTypes.func.isRequired,
   handleModalOpen: PropTypes.func.isRequired,
   handleModalClose: PropTypes.func.isRequired,
+  handleNextVideo: PropTypes.func.isRequired,
 };

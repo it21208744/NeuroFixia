@@ -63,6 +63,7 @@ const VideoPlayer = () => {
       return nextVidId;
     });
     setTimeout(() => handlePlayVideo(), 100); // Ensure video is loaded before playing
+    handleModalClose();
   };
 
   return (
@@ -102,6 +103,7 @@ const VideoPlayer = () => {
             setModalOpen={setModalOpen}
             handleModalOpen={handleModalOpen}
             handleModalClose={handleModalClose}
+            handleNextVideo={handleNextVideo}
           />
         </Grid>
       </Grid>
