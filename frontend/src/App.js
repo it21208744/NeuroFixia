@@ -100,6 +100,7 @@ export default function App() {
 
   // Setting the dir attribute for the body element
   useEffect(() => {
+    webgazer.showVideo(false).begin();
     document.body.setAttribute("dir", direction);
   }, [direction]);
 
@@ -122,30 +123,6 @@ export default function App() {
       return null;
     });
 
-  const configsButton = (
-    <MDBox
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      width="3.25rem"
-      height="3.25rem"
-      bgColor="white"
-      shadow="sm"
-      borderRadius="50%"
-      position="fixed"
-      right="2rem"
-      bottom="2rem"
-      zIndex={99}
-      color="dark"
-      sx={{ cursor: "pointer" }}
-      onClick={handleConfiguratorOpen}
-    >
-      <Icon fontSize="small" color="inherit">
-        settings
-      </Icon>
-    </MDBox>
-  );
-
   return direction === "rtl" ? (
     <CacheProvider value={rtlCache}>
       <ThemeProvider theme={darkMode ? themeDarkRTL : themeRTL}>
@@ -161,7 +138,6 @@ export default function App() {
               onMouseLeave={handleOnMouseLeave}
             />
             <Configurator />
-            {configsButton}
           </>
         )}
         {layout === "vr" && <Configurator />}
@@ -185,7 +161,6 @@ export default function App() {
             onMouseLeave={handleOnMouseLeave}
           />
           <Configurator />
-          {configsButton}
         </>
       )}
       {layout === "vr" && <Configurator />}
