@@ -12,6 +12,9 @@ import { Pause } from "@mui/icons-material";
 import Button from "@mui/material/Button";
 
 const VideoPlayer = () => {
+  const [webGazerAvailability, setWebGazerAvailability] = useState(false);
+  const [gazeCoordinates, setGazeCoordinates] = useState([]);
+  const collectGazeDataRef = useRef(false);
   const [vidId, setVidId] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const videoList = [video1, video2, video3, video4];
@@ -23,6 +26,19 @@ const VideoPlayer = () => {
   const handleModalClose = () => setModalOpen(false);
 
   useEffect(() => {
+    webgazer
+      .setGazeListener((data, timeStamp) => {
+        if (data) {
+          setWebGazerAvailability(true);
+        }
+        if (collectGazeDataRef.current && data) {
+          const { x, y } = data;
+          setGazeCoordinates((prevData) => [...prevData, { x, y }]);
+          // console.log({ x, y });
+        }
+      })
+      .begin();
+
     if (playerRef.current) {
       const player = new MuiPlayer({
         container: playerRef.current,
@@ -37,6 +53,7 @@ const VideoPlayer = () => {
 
       if (videoElement) {
         const handleVideoEnd = () => {
+          collectGazeDataRef.current = false;
           handleModalOpen();
         };
         videoElement.addEventListener("ended", handleVideoEnd);
@@ -49,6 +66,8 @@ const VideoPlayer = () => {
   }, [vidId]);
 
   const handlePlayVideo = () => {
+    collectGazeDataRef.current = true;
+    console.log("useRef", collectGazeDataRef.current);
     if (videoElementRef.current) {
       videoElementRef.current
         .play()
@@ -58,11 +77,16 @@ const VideoPlayer = () => {
   };
 
   const handleNextVideo = () => {
-    setVidId((prev) => {
-      const nextVidId = (prev + 1) % videoList.length;
-      return nextVidId;
-    });
-    setTimeout(() => handlePlayVideo(), 100); // Ensure video is loaded before playing
+    console.log(gazeCoordinates);
+    collectGazeDataRef.current = true;
+    if (vidId != 3) {
+      setVidId((prev) => {
+        const nextVidId = (prev + 1) % videoList.length;
+        return nextVidId;
+      });
+      setTimeout(() => handlePlayVideo(), 100); // Ensure video is loaded before playing
+    }
+    collectGazeDataRef.current = false;
     handleModalClose();
   };
 
@@ -95,6 +119,7 @@ const VideoPlayer = () => {
             color="primary"
             onClick={handleNextVideo}
             style={{ position: "fixed", right: "2rem", bottom: "6rem", zIndex: 99 }}
+            disable={true}
           >
             Next Video
           </Button>
