@@ -12,6 +12,7 @@ import { Pause } from "@mui/icons-material";
 import Button from "@mui/material/Button";
 
 const VideoPlayer = () => {
+  const [modalResponses, setModalResponses] = useState([]);
   const [webGazerAvailability, setWebGazerAvailability] = useState(false);
   const [gazeCoordinates, setGazeCoordinates] = useState([]);
   const collectGazeDataRef = useRef(false);
@@ -34,7 +35,6 @@ const VideoPlayer = () => {
         if (collectGazeDataRef.current && data) {
           const { x, y } = data;
           setGazeCoordinates((prevData) => [...prevData, { x, y }]);
-          // console.log({ x, y });
         }
       })
       .begin();
@@ -53,8 +53,11 @@ const VideoPlayer = () => {
 
       if (videoElement) {
         const handleVideoEnd = () => {
-          collectGazeDataRef.current = false;
-          handleModalOpen();
+          collectGazeDataRef.current = false; // Stop collecting gaze data
+          if (vidId <= 3) {
+            // Open modal for all videos (including the 4th)
+            handleModalOpen();
+          }
         };
         videoElement.addEventListener("ended", handleVideoEnd);
 
@@ -66,28 +69,44 @@ const VideoPlayer = () => {
   }, [vidId]);
 
   const handlePlayVideo = () => {
-    collectGazeDataRef.current = true;
-    console.log("useRef", collectGazeDataRef.current);
-    if (videoElementRef.current) {
-      videoElementRef.current
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch((error) => console.log("Play failed:", error));
+    if (vidId < 4) {
+      // Only play if it's not the last video
+      collectGazeDataRef.current = true;
+      console.log("useRef", collectGazeDataRef.current);
+      if (videoElementRef.current) {
+        videoElementRef.current
+          .play()
+          .then(() => setIsPlaying(true))
+          .catch((error) => console.log("Play failed:", error));
+      }
     }
   };
 
-  const handleNextVideo = () => {
-    console.log(gazeCoordinates);
-    collectGazeDataRef.current = true;
-    if (vidId != 3) {
+  const handleNextVideo = (response) => {
+    setModalResponses((prevRes) => [...prevRes, response]); // Add response to modalResponses
+    console.log("Modal Responses:", modalResponses);
+
+    if (vidId < 3) {
+      // Only proceed if it's not the last video
+      collectGazeDataRef.current = true;
       setVidId((prev) => {
         const nextVidId = (prev + 1) % videoList.length;
         return nextVidId;
       });
       setTimeout(() => handlePlayVideo(), 100); // Ensure video is loaded before playing
+    } else {
+      console.log("All videos completed. Data collection stopped.");
+      console.log("Final Modal Responses:", [...modalResponses, response]); // Log final responses
+      console.log("Final Gaze Coordinates:", gazeCoordinates);
     }
     collectGazeDataRef.current = false;
     handleModalClose();
+  };
+
+  // Function to log all gaze data and form data
+  const logAllData = () => {
+    console.log("All Modal Responses (Form Data):", modalResponses);
+    console.log("All Gaze Coordinates (Gaze Data):", gazeCoordinates);
   };
 
   return (
@@ -117,13 +136,21 @@ const VideoPlayer = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={handleNextVideo}
+            onClick={() => handleNextVideo("")} // Pass an empty response for the button
             style={{ position: "fixed", right: "2rem", bottom: "6rem", zIndex: 99 }}
-            disable={true}
           >
             Next Video
           </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={logAllData} // Log all data when clicked
+            style={{ position: "fixed", right: "2rem", bottom: "10rem", zIndex: 99 }}
+          >
+            Log All Data
+          </Button>
           <FormModal
+            setModalResponses={setModalResponses}
             modalOpen={modalOpen}
             setModalOpen={setModalOpen}
             handleModalOpen={handleModalOpen}

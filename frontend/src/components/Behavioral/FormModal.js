@@ -25,15 +25,23 @@ const style = {
 };
 
 export default function FormModal({
+  setModalResponses,
   modalOpen,
   setModalOpen,
   handleModalOpen,
   handleModalClose,
   handleNextVideo,
 }) {
-  // const [open, setOpen] = useState(false);
-  // const handleOpen = () => setOpen(true);
-  // const handleClose = () => setOpen(false);
+  const [selectedValue, setSelectedValue] = useState("");
+
+  const handleChange = (event) => {
+    setSelectedValue(event.target.value);
+  };
+
+  const handleNext = () => {
+    handleNextVideo(selectedValue);
+    setSelectedValue(""); // Reset the selected value
+  };
 
   return (
     <div>
@@ -53,6 +61,8 @@ export default function FormModal({
               row
               aria-labelledby="demo-row-radio-buttons-group-label"
               name="row-radio-buttons-group"
+              value={selectedValue}
+              onChange={handleChange}
             >
               <FormControlLabel value="Happy" control={<Radio />} label="Happy" />
               <FormControlLabel value="Sad" control={<Radio />} label="Sad" />
@@ -60,10 +70,9 @@ export default function FormModal({
               <FormControlLabel value="Surprised" control={<Radio />} label="Surprised" />
               <FormControlLabel value="Scared" control={<Radio />} label="Scared" />
               <FormControlLabel value="noAnswer" control={<Radio />} label="No answer" />
-              {/* <FormControlLabel value="disabled" disabled control={<Radio />} label="other" /> */}
             </RadioGroup>
             <Stack direction="row" justifyContent="center">
-              <Button variant="contained" color="success" onClick={handleNextVideo}>
+              <Button variant="contained" color="success" onClick={handleNext}>
                 Next
               </Button>
             </Stack>
@@ -75,6 +84,7 @@ export default function FormModal({
 }
 
 FormModal.propTypes = {
+  setModalResponses: PropTypes.func.isRequired,
   modalOpen: PropTypes.bool.isRequired,
   setModalOpen: PropTypes.func.isRequired,
   handleModalOpen: PropTypes.func.isRequired,
