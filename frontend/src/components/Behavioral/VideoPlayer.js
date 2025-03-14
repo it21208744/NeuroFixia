@@ -21,8 +21,11 @@ const VideoPlayer = () => {
   const videoList = [video1, video2, video3, video4];
   const playerRef = useRef(null);
   const videoElementRef = useRef(null);
-
   const [modalOpen, setModalOpen] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [recordedChunks, setRecordedChunks] = useState([]);
+  const [downloadUrl, setDownloadUrl] = useState("");
+
   const handleModalOpen = () => setModalOpen(true);
   const handleModalClose = () => setModalOpen(false);
 
@@ -68,6 +71,36 @@ const VideoPlayer = () => {
     }
   }, [vidId]);
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          setRecordedChunks((prev) => [...prev, event.data]);
+        }
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: "video/webm" });
+        setDownloadUrl(URL.createObjectURL(blob));
+      };
+
+      recorder.start(1000); // Capture data every 1 second
+      setMediaRecorder(recorder);
+    } catch (error) {
+      console.error("Error starting recording:", error);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+    }
+  };
+
   const handlePlayVideo = () => {
     if (vidId < 4) {
       // Only play if it's not the last video
@@ -76,7 +109,10 @@ const VideoPlayer = () => {
       if (videoElementRef.current) {
         videoElementRef.current
           .play()
-          .then(() => setIsPlaying(true))
+          .then(() => {
+            setIsPlaying(true);
+            startRecording(); // Start recording when video starts playing
+          })
           .catch((error) => console.log("Play failed:", error));
       }
     }
@@ -98,6 +134,7 @@ const VideoPlayer = () => {
       console.log("All videos completed. Data collection stopped.");
       console.log("Final Modal Responses:", [...modalResponses, response]); // Log final responses
       console.log("Final Gaze Coordinates:", gazeCoordinates);
+      stopRecording(); // Stop recording after the 4th modal
     }
     collectGazeDataRef.current = false;
     handleModalClose();
@@ -149,6 +186,17 @@ const VideoPlayer = () => {
           >
             Log All Data
           </Button>
+          {downloadUrl && (
+            <Button
+              variant="contained"
+              color="success"
+              href={downloadUrl}
+              download="recorded-video.webm"
+              style={{ position: "fixed", right: "2rem", bottom: "14rem", zIndex: 99 }}
+            >
+              Download Video
+            </Button>
+          )}
           <FormModal
             setModalResponses={setModalResponses}
             modalOpen={modalOpen}
