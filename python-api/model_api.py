@@ -50,7 +50,9 @@ print(f'Test Accuracy: {test_accuracy:.2f}')
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Get data from request
+        # Log the incoming request data
+        print(f"Request data received: {request.json}")
+
         input_data = request.json['expressions']
         input_array = np.array(input_data).reshape(1, -1, 1)
 
@@ -61,7 +63,10 @@ def predict():
         return jsonify({'prediction': result, 'confidence': float(prediction)})
 
     except Exception as e:
+        print(f"Error: {e}")  # Log the error
         return jsonify({'error': str(e)}), 500
+
+
 
 if __name__ == '__main__':
     app.run(port=5001, debug=True)
