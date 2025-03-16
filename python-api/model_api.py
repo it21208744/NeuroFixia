@@ -268,7 +268,7 @@ def predict_combined_endpoint():
             'details': {
                 'behavior': behavior_result,
                 'heatmap': heatmap_result,
-                'asd': asd_result
+                'facial expressions recognition': asd_result
             }
         })
     except Exception as e:
