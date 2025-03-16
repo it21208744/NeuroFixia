@@ -129,6 +129,46 @@ app.post('/api/analyze-asd', async (req, res) => {
   }
 })
 
+app.post(
+  '/api/analyze-combined',
+  upload.fields([{ name: 'video' }, { name: 'image' }]),
+  async (req, res) => {
+    try {
+      const videoPath = req.files['video']
+        ? path.resolve(req.files['video'][0].path).replace(/\\/g, '/')
+        : null
+      const imagePath = req.files['image']
+        ? path.resolve(req.files['image'][0].path).replace(/\\/g, '/')
+        : null
+      const expressions = req.body.expressions
+
+      console.log('Video Path:', videoPath)
+      console.log('Image Path:', imagePath)
+      console.log('Expressions:', expressions)
+
+      // Call the Python API for combined prediction
+      const pythonApiResponse = await axios.post(
+        'http://localhost:5002/predict-combined',
+        {
+          video_path: videoPath,
+          image_path: imagePath,
+          expressions: expressions,
+        }
+      )
+
+      // Cleanup uploaded files
+      if (videoPath) fs.unlinkSync(videoPath)
+      if (imagePath) fs.unlinkSync(imagePath)
+
+      // Send the response from the Python API back to the client
+      res.json(pythonApiResponse.data)
+    } catch (error) {
+      console.error('Error:', error)
+      res.status(500).json({ error: 'Failed to analyze combined data' })
+    }
+  }
+)
+
 app.use('/api/users', userRoutes)
 app.use('/api/models', modelRoutes)
 

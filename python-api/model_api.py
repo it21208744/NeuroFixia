@@ -9,6 +9,7 @@ from tensorflow.keras.preprocessing import image
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import joblib
+import json  # Add this import
 
 app = Flask(__name__)
 
@@ -152,5 +153,152 @@ def predict_asd_endpoint():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/predict-combined', methods=['POST'])
+def predict_combined_endpoint():
+    try:
+        # Log the request data for debugging
+        print("Request Files:", request.files)
+        print("Request Form:", request.form)
+
+        # Get uploaded files and form data
+        video_file = request.files.get('video')
+        image_file = request.files.get('image')
+        expressions = request.form.get('expressions')
+
+        # Log the received data
+        print("Video File:", video_file)
+        print("Image File:", image_file)
+        print("Expressions:", expressions)
+
+        # Save uploaded files temporarily
+        video_path = None
+        image_path = None
+
+        if video_file:
+            video_path = f"uploads/{video_file.filename}"
+            video_file.save(video_path)
+            print("Video Path:", video_path)
+
+        if image_file:
+            image_path = f"uploads/{image_file.filename}"
+            image_file.save(image_path)
+            print("Image Path:", image_path)
+
+        # Parse expressions (if provided)
+        if expressions:
+            try:
+                expressions = json.loads(expressions)  # Safely parse JSON string
+                print("Parsed Expressions:", expressions)
+            except json.JSONDecodeError as e:
+                print("Error parsing expressions:", e)
+                return jsonify({'error': 'Invalid expressions format. Expected a JSON array.'}), 400
+        else:
+            expressions = None
+
+        # Initialize results
+        behavior_result = None
+        heatmap_result = None
+        asd_result = None
+
+        # Get predictions from each model
+        if video_path:
+            behavior_probabilities = predict_behavior(video_path, behavior_model)
+            if behavior_probabilities is not None:
+                behavior_result = 'autism' if np.argmax(behavior_probabilities) == 0 else 'TD'
+                print("Behavior Result:", behavior_result)
+
+        if image_path:
+            heatmap_confidence = predict_heatmap(image_path)
+            print("Heatmap Confidence:", heatmap_confidence)
+            heatmap_result = "ASD" if heatmap_confidence <= 0.5 else "NON ASD"
+            print("Heatmap Result:", heatmap_result)
+
+        if expressions:
+            asd_result, asd_confidence = predict_asd(expressions)
+            print("ASD Result:", asd_result)
+            print("ASD Confidence:", asd_confidence)
+
+        # Combine results using weighted average
+        weights = {
+            'behavior': 0.4,  # Weight for behavior model
+            'heatmap': 0.3,   # Weight for heatmap model
+            'asd': 0.3        # Weight for ASD model
+        }
+
+        # Map predictions to numerical values
+        prediction_map = {
+            'autism': 1,
+            'TD': 0,
+            'ASD': 1,
+            'NON ASD': 0
+        }
+
+        # Calculate weighted average
+        weighted_sum = 0
+        total_weight = 0
+
+        if behavior_result:
+            weighted_sum += prediction_map.get(behavior_result, 0) * weights['behavior']
+            total_weight += weights['behavior']
+
+        if heatmap_result:
+            weighted_sum += prediction_map.get(heatmap_result, 0) * weights['heatmap']
+            total_weight += weights['heatmap']
+
+        if asd_result:
+            weighted_sum += prediction_map.get(asd_result, 0) * weights['asd']
+            total_weight += weights['asd']
+
+        if total_weight == 0:
+            return jsonify({'error': 'No valid predictions available.'}), 400
+
+        combined_prediction = weighted_sum / total_weight
+        final_result = 'autism' if combined_prediction > 0.5 else 'non-autism'
+
+        # Cleanup uploaded files
+        if video_path and os.path.exists(video_path):
+            os.remove(video_path)
+        if image_path and os.path.exists(image_path):
+            os.remove(image_path)
+
+        # Return the combined result
+        return jsonify({
+            'final_prediction': final_result,
+            'combined_confidence': float(combined_prediction),
+            'details': {
+                'behavior': behavior_result,
+                'heatmap': heatmap_result,
+                'asd': asd_result
+            }
+        })
+    except Exception as e:
+        # Cleanup uploaded files in case of an error
+        if video_path and os.path.exists(video_path):
+            os.remove(video_path)
+        if image_path and os.path.exists(image_path):
+            os.remove(image_path)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/test-combined', methods=['GET'])
+def test_combined_endpoint():
+    try:
+        # Hardcoded test data
+        video_path = './test_video.mp4'  # Replace with the path to a test video
+        image_path = './test_image.png'  # Replace with the path to a test image
+        expressions = ['Happy', 'Sad', 'Angry', 'No answer']
+
+        # Simulate a request to /predict-combined
+        response = predict_combined_endpoint({
+            'video_path': video_path,
+            'image_path': image_path,
+            'expressions': expressions
+        })
+
+        return response
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
+    # Create the uploads directory if it doesn't exist
+    os.makedirs('uploads', exist_ok=True)
     app.run(port=5002, debug=True)
