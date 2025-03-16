@@ -3,6 +3,7 @@ const express = require('express')
 const connectDB = require('./config/db')
 const userRoutes = require('./routes/userRoutes')
 const modelRoutes = require('./routes/modelRoutes')
+const axios = require('axios')
 const cors = require('cors')
 const multer = require('multer')
 const path = require('path')
@@ -56,6 +57,31 @@ app.post(
     }
   }
 )
+
+app.post('/api/analyze-video', upload.single('video'), async (req, res) => {
+  try {
+    console.log('Uploaded File:', req.file) // Log the uploaded file object
+    const videoPath = path.resolve(req.file.path).replace(/\\/g, '/')
+    console.log('Absolute Video Path:', videoPath) // Log the absolute path
+
+    // Call the Python API
+    const pythonApiResponse = await axios.post(
+      'http://localhost:5002/predict-behavior',
+      {
+        video_path: videoPath,
+      }
+    )
+
+    // Cleanup uploaded file
+    fs.unlinkSync(videoPath)
+
+    // Send the response from the Python API back to the client
+    res.json(pythonApiResponse.data)
+  } catch (error) {
+    console.error('Error:', error) // Log the full error
+    res.status(500).json({ error: 'Failed to analyze video' })
+  }
+})
 
 app.use('/api/users', userRoutes)
 app.use('/api/models', modelRoutes)
