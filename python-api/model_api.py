@@ -6,12 +6,20 @@ import cv2
 from tensorflow.keras.models import load_model
 import mediapipe as mp
 from tensorflow.keras.preprocessing import image
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+import joblib
 
 app = Flask(__name__)
 
 # Load the trained models
 behavior_model = load_model('./autism_behavior_model_v3.h5')
 heatmap_model = load_model('./heatMap_prediction.h5')
+asd_model = load_model('asd_prediction_model.h5')
+
+# Load the saved encoders
+label_encoder = joblib.load('label_encoder.joblib')
+one_hot_encoder = joblib.load('one_hot_encoder.joblib')
 
 # Setup Mediapipe Pose model
 mp_pose = mp.solutions.pose
@@ -102,6 +110,14 @@ def predict_heatmap(image_path):
     prediction = heatmap_model.predict(img_array)
     return prediction[0][0]
 
+# Function to predict ASD based on facial expressions
+def predict_asd(expressions):
+    # Encode the input data
+    new_data_encoded = one_hot_encoder.transform([expressions])
+    prediction = asd_model.predict(new_data_encoded)
+    result = 'Non-ASD' if prediction[0][0] > 0.5 else 'ASD'
+    return result, float(prediction[0][0])
+
 @app.route('/predict-behavior', methods=['POST'])
 def predict_behavior_endpoint():
     try:
@@ -124,6 +140,15 @@ def predict_heatmap_endpoint():
         prediction = predict_heatmap(image_path)
         result = "NON ASD" if prediction > 0.5 else "ASD"
         return jsonify({'prediction': result, 'confidence': float(prediction)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/predict-asd', methods=['POST'])
+def predict_asd_endpoint():
+    try:
+        expressions = request.json['expressions']
+        result, confidence = predict_asd(expressions)
+        return jsonify({'prediction': result, 'confidence': confidence})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

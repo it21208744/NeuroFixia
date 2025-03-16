@@ -108,6 +108,27 @@ app.post('/api/analyze-heatmap', upload.single('image'), async (req, res) => {
   }
 })
 
+app.post('/api/analyze-asd', async (req, res) => {
+  try {
+    const expressions = req.body.expressions
+    console.log('Expressions:', expressions) // Log the expressions
+
+    // Call the Python API
+    const pythonApiResponse = await axios.post(
+      'http://localhost:5002/predict-asd',
+      {
+        expressions: expressions,
+      }
+    )
+
+    // Send the response from the Python API back to the client
+    res.json(pythonApiResponse.data)
+  } catch (error) {
+    console.error('Error:', error) // Log the full error
+    res.status(500).json({ error: 'Failed to analyze expressions' })
+  }
+})
+
 app.use('/api/users', userRoutes)
 app.use('/api/models', modelRoutes)
 
