@@ -66,7 +66,7 @@ app.post('/api/analyze-video', upload.single('video'), async (req, res) => {
 
     // Call the Python API
     const pythonApiResponse = await axios.post(
-      'http://localhost:5002/predict-behavior',
+      'http://127.0.0.1:5002/predict-behavior',
       {
         video_path: videoPath,
       }
@@ -91,7 +91,7 @@ app.post('/api/analyze-heatmap', upload.single('image'), async (req, res) => {
 
     // Call the Python API
     const pythonApiResponse = await axios.post(
-      'http://localhost:5002/predict-heatmap',
+      'http://127.0.0.1:5002/predict-heatmap',
       {
         image_path: imagePath,
       }
@@ -115,7 +115,7 @@ app.post('/api/analyze-asd', async (req, res) => {
 
     // Call the Python API
     const pythonApiResponse = await axios.post(
-      'http://localhost:5002/predict-asd',
+      'http://127.0.0.1:5002/predict-asd',
       {
         expressions: expressions,
       }
@@ -148,7 +148,7 @@ app.post(
 
       // Call the Python API for combined prediction
       const pythonApiResponse = await axios.post(
-        'http://localhost:5002/predict-combined',
+        'http://127.0.0.1:5002/predict-combined',
         {
           video_path: videoPath,
           image_path: imagePath,
