@@ -83,6 +83,31 @@ app.post('/api/analyze-video', upload.single('video'), async (req, res) => {
   }
 })
 
+app.post('/api/analyze-heatmap', upload.single('image'), async (req, res) => {
+  try {
+    console.log('Uploaded File:', req.file) // Log the uploaded file object
+    const imagePath = path.resolve(req.file.path).replace(/\\/g, '/')
+    console.log('Absolute Image Path:', imagePath) // Log the absolute path
+
+    // Call the Python API
+    const pythonApiResponse = await axios.post(
+      'http://localhost:5002/predict-heatmap',
+      {
+        image_path: imagePath,
+      }
+    )
+
+    // Cleanup uploaded file
+    fs.unlinkSync(imagePath)
+
+    // Send the response from the Python API back to the client
+    res.json(pythonApiResponse.data)
+  } catch (error) {
+    console.error('Error:', error) // Log the full error
+    res.status(500).json({ error: 'Failed to analyze image' })
+  }
+})
+
 app.use('/api/users', userRoutes)
 app.use('/api/models', modelRoutes)
 

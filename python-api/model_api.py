@@ -5,11 +5,13 @@ import numpy as np
 import cv2
 from tensorflow.keras.models import load_model
 import mediapipe as mp
+from tensorflow.keras.preprocessing import image
 
 app = Flask(__name__)
 
-# Load the trained model
-model = load_model('./autism_behavior_model_v3.h5')
+# Load the trained models
+behavior_model = load_model('./autism_behavior_model_v3.h5')
+heatmap_model = load_model('./heatMap_prediction.h5')
 
 # Setup Mediapipe Pose model
 mp_pose = mp.solutions.pose
@@ -91,11 +93,20 @@ def predict_behavior(video_path, model):
     # Return the predicted probabilities for each class
     return avg_probabilities
 
+# Function to predict heatmap
+def predict_heatmap(image_path):
+    img = image.load_img(image_path, target_size=(128, 128))
+    img_array = image.img_to_array(img)
+    img_array = img_array / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
+    prediction = heatmap_model.predict(img_array)
+    return prediction[0][0]
+
 @app.route('/predict-behavior', methods=['POST'])
 def predict_behavior_endpoint():
     try:
         video_path = request.json['video_path']
-        avg_probabilities = predict_behavior(video_path, model)
+        avg_probabilities = predict_behavior(video_path, behavior_model)
 
         if avg_probabilities is not None:
             predicted_class = np.argmax(avg_probabilities)
@@ -103,6 +114,16 @@ def predict_behavior_endpoint():
             return jsonify({'prediction': result, 'probabilities': avg_probabilities.tolist()})
         else:
             return jsonify({'error': 'No valid frames with keypoints detected.'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/predict-heatmap', methods=['POST'])
+def predict_heatmap_endpoint():
+    try:
+        image_path = request.json['image_path']
+        prediction = predict_heatmap(image_path)
+        result = "NON ASD" if prediction > 0.5 else "ASD"
+        return jsonify({'prediction': result, 'confidence': float(prediction)})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
