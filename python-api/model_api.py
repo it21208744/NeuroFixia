@@ -119,39 +119,39 @@ def predict_asd(expressions):
     result = 'Non-ASD' if prediction[0][0] > 0.5 else 'ASD'
     return result, float(prediction[0][0])
 
-@app.route('/predict-behavior', methods=['POST'])
-def predict_behavior_endpoint():
-    try:
-        video_path = request.json['video_path']
-        avg_probabilities = predict_behavior(video_path, behavior_model)
+# @app.route('/predict-behavior', methods=['POST'])
+# def predict_behavior_endpoint():
+#     try:
+#         video_path = request.json['video_path']
+#         avg_probabilities = predict_behavior(video_path, behavior_model)
 
-        if avg_probabilities is not None:
-            predicted_class = np.argmax(avg_probabilities)
-            result = 'autism' if predicted_class == 0 else 'TD'
-            return jsonify({'prediction': result, 'probabilities': avg_probabilities.tolist()})
-        else:
-            return jsonify({'error': 'No valid frames with keypoints detected.'}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+#         if avg_probabilities is not None:
+#             predicted_class = np.argmax(avg_probabilities)
+#             result = 'autism' if predicted_class == 0 else 'TD'
+#             return jsonify({'prediction': result, 'probabilities': avg_probabilities.tolist()})
+#         else:
+#             return jsonify({'error': 'No valid frames with keypoints detected.'}), 400
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
-@app.route('/predict-heatmap', methods=['POST'])
-def predict_heatmap_endpoint():
-    try:
-        image_path = request.json['image_path']
-        prediction = predict_heatmap(image_path)
-        result = "Non-ASD" if prediction > 0.5 else "ASD"
-        return jsonify({'prediction': result, 'confidence': float(prediction)})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# @app.route('/predict-heatmap', methods=['POST'])
+# def predict_heatmap_endpoint():
+#     try:
+#         image_path = request.json['image_path']
+#         prediction = predict_heatmap(image_path)
+#         result = "Non-ASD" if prediction > 0.5 else "ASD"
+#         return jsonify({'prediction': result, 'confidence': float(prediction)})
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
-@app.route('/predict-asd', methods=['POST'])
-def predict_asd_endpoint():
-    try:
-        expressions = request.json['expressions']
-        result, confidence = predict_asd(expressions)
-        return jsonify({'prediction': result, 'confidence': confidence})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# @app.route('/predict-asd', methods=['POST'])
+# def predict_asd_endpoint():
+#     try:
+#         expressions = request.json['expressions']
+#         result, confidence = predict_asd(expressions)
+#         return jsonify({'prediction': result, 'confidence': confidence})
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
 @app.route('/predict-combined', methods=['POST'])
 def predict_combined_endpoint():
