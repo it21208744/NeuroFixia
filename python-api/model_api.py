@@ -139,7 +139,7 @@ def predict_heatmap_endpoint():
     try:
         image_path = request.json['image_path']
         prediction = predict_heatmap(image_path)
-        result = "NON ASD" if prediction > 0.5 else "ASD"
+        result = "Non-ASD" if prediction > 0.5 else "ASD"
         return jsonify({'prediction': result, 'confidence': float(prediction)})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -197,20 +197,25 @@ def predict_combined_endpoint():
 
         # Initialize results
         behavior_result = None
+        behavior_confidence = None
         heatmap_result = None
+        heatmap_confidence = None
         asd_result = None
+        asd_confidence = None
 
         # Get predictions from each model
         if video_path:
             behavior_probabilities = predict_behavior(video_path, behavior_model)
             if behavior_probabilities is not None:
-                behavior_result = 'autism' if np.argmax(behavior_probabilities) == 0 else 'TD'
+                behavior_result = 'ASD' if np.argmax(behavior_probabilities) == 0 else 'Non-ASD'
+                behavior_confidence = float(behavior_probabilities[np.argmax(behavior_probabilities)])
                 print("Behavior Result:", behavior_result)
+                print("Behavior Confidence:", behavior_confidence)
 
         if image_path:
             heatmap_confidence = predict_heatmap(image_path)
             print("Heatmap Confidence:", heatmap_confidence)
-            heatmap_result = "ASD" if heatmap_confidence <= 0.5 else "NON ASD"
+            heatmap_result = "ASD" if heatmap_confidence <= 0.5 else "Non-ASD"
             print("Heatmap Result:", heatmap_result)
 
         if expressions:
@@ -261,14 +266,23 @@ def predict_combined_endpoint():
         if image_path and os.path.exists(image_path):
             os.remove(image_path)
 
-        # Return the combined result
+        # Return the combined result with confidence scores
         return jsonify({
             'final_prediction': final_result,
             'combined_confidence': float(combined_prediction),
             'details': {
-                'behavior': behavior_result,
-                'heatmap': heatmap_result,
-                'facial expressions recognition': asd_result
+                'behavior': {
+                    'prediction': behavior_result,
+                    'confidence': behavior_confidence
+                },
+                'heatmap': {
+                    'prediction': heatmap_result,
+                    'confidence': float(heatmap_confidence)
+                },
+                'facial_expressions_recognition': {
+                    'prediction': asd_result,
+                    'confidence': asd_confidence
+                }
             }
         })
     except Exception as e:
