@@ -263,24 +263,24 @@ def predict_combined_endpoint():
             os.remove(image_path)
         return jsonify({'error': str(e)}), 500
 
-@app.route('/test-combined', methods=['GET'])
-def test_combined_endpoint():
-    try:
-        # Hardcoded test data
-        video_path = './test_video.mp4'  # Replace with the path to a test video
-        image_path = './test_image.png'  # Replace with the path to a test image
-        expressions = ['Happy', 'Sad', 'Angry', 'No answer']
+# @app.route('/test-combined', methods=['GET'])
+# def test_combined_endpoint():
+#     try:
+#         # Hardcoded test data
+#         video_path = './test_video.mp4'  # Replace with the path to a test video
+#         image_path = './test_image.png'  # Replace with the path to a test image
+#         expressions = ['Happy', 'Sad', 'Angry', 'No answer']
 
-        # Simulate a request to /predict-combined
-        response = predict_combined_endpoint({
-            'video_path': video_path,
-            'image_path': image_path,
-            'expressions': expressions
-        })
+#         # Simulate a request to /predict-combined
+#         response = predict_combined_endpoint({
+#             'video_path': video_path,
+#             'image_path': image_path,
+#             'expressions': expressions
+#         })
 
-        return response
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+#         return response
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     # Create the uploads directory if it doesn't exist
