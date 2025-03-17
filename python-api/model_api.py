@@ -120,39 +120,6 @@ def predict_asd(expressions):
     result = 'Non-ASD' if prediction[0][0] > 0.5 else 'ASD'
     return result, float(prediction[0][0])
 
-# @app.route('/predict-behavior', methods=['POST'])
-# def predict_behavior_endpoint():
-#     try:
-#         video_path = request.json['video_path']
-#         avg_probabilities = predict_behavior(video_path, behavior_model)
-
-#         if avg_probabilities is not None:
-#             predicted_class = np.argmax(avg_probabilities)
-#             result = 'autism' if predicted_class == 0 else 'TD'
-#             return jsonify({'prediction': result, 'probabilities': avg_probabilities.tolist()})
-#         else:
-#             return jsonify({'error': 'No valid frames with keypoints detected.'}), 400
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
-
-# @app.route('/predict-heatmap', methods=['POST'])
-# def predict_heatmap_endpoint():
-#     try:
-#         image_path = request.json['image_path']
-#         prediction = predict_heatmap(image_path)
-#         result = "Non-ASD" if prediction > 0.5 else "ASD"
-#         return jsonify({'prediction': result, 'confidence': float(prediction)})
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
-
-# @app.route('/predict-asd', methods=['POST'])
-# def predict_asd_endpoint():
-#     try:
-#         expressions = request.json['expressions']
-#         result, confidence = predict_asd(expressions)
-#         return jsonify({'prediction': result, 'confidence': confidence})
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
 
 @app.route('/predict-combined', methods=['POST'])
 def predict_combined_endpoint():
@@ -224,7 +191,7 @@ def predict_combined_endpoint():
             print("ASD Result:", asd_result)
             print("ASD Confidence:", asd_confidence)
 
-        # Combine results using weighted average
+        # Combine results using weighted average of confidence scores
         weights = {
             'behavior': 0.4,  # Weight for behavior model
             'heatmap': 0.4,   # Weight for heatmap model
@@ -239,20 +206,23 @@ def predict_combined_endpoint():
             'NON ASD': 0
         }
 
-        # Calculate weighted average
+        # Calculate weighted sum of confidence scores
         weighted_sum = 0
         total_weight = 0
 
         if behavior_result:
-            weighted_sum += prediction_map.get(behavior_result, 0) * weights['behavior']
+            behavior_score = prediction_map.get(behavior_result, 0) * behavior_confidence
+            weighted_sum += behavior_score * weights['behavior']
             total_weight += weights['behavior']
 
         if heatmap_result:
-            weighted_sum += prediction_map.get(heatmap_result, 0) * weights['heatmap']
+            heatmap_score = prediction_map.get(heatmap_result, 0) * (1 - heatmap_confidence if heatmap_result == 'ASD' else heatmap_confidence)
+            weighted_sum += heatmap_score * weights['heatmap']
             total_weight += weights['heatmap']
 
         if asd_result:
-            weighted_sum += prediction_map.get(asd_result, 0) * weights['asd']
+            asd_score = prediction_map.get(asd_result, 0) * asd_confidence
+            weighted_sum += asd_score * weights['asd']
             total_weight += weights['asd']
 
         if total_weight == 0:
