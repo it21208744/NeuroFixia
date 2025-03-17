@@ -16,6 +16,7 @@ import ResultsModal from "./ResultsModal";
 
 const VideoPlayer = () => {
   const [modalResponses, setModalResponses] = useState([]);
+  const [apiRes, setApiRes] = useState({});
   const [webGazerAvailability, setWebGazerAvailability] = useState(false);
   const [gazeCoordinates, setGazeCoordinates] = useState([]);
   const collectGazeDataRef = useRef(false);
@@ -163,6 +164,7 @@ const VideoPlayer = () => {
   // Function to send data to the API
   const sendDataToAPI = async () => {
     try {
+      setResultModalOpen(true);
       const formData = new FormData();
 
       // Append the recorded video if available
@@ -191,7 +193,7 @@ const VideoPlayer = () => {
           "Content-Type": "multipart/form-data",
         },
       });
-
+      setApiRes(response.data);
       console.log("API Response:", response.data);
     } catch (error) {
       console.error("Error sending data to API:", error);
@@ -279,6 +281,7 @@ const VideoPlayer = () => {
             handleModalOpen={handleResultModalOpen}
             handleModalClose={handleResultModalClose}
             handleNextVideo={handleNextVideo}
+            data={apiRes}
           />
         </Grid>
       </Grid>
