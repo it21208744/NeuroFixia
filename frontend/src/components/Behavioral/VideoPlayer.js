@@ -12,6 +12,7 @@ import { Pause } from "@mui/icons-material";
 import Button from "@mui/material/Button";
 import axios from "axios";
 import LineArtCanvas from "./LineArtCanvas";
+import ResultsModal from "./ResultsModal";
 
 const VideoPlayer = () => {
   const [modalResponses, setModalResponses] = useState([]);
@@ -24,6 +25,7 @@ const VideoPlayer = () => {
   const playerRef = useRef(null);
   const videoElementRef = useRef(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [resultModalOpen, setResultModalOpen] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [recordedChunks, setRecordedChunks] = useState([]);
   const [downloadUrl, setDownloadUrl] = useState("");
@@ -34,6 +36,9 @@ const VideoPlayer = () => {
 
   const handleModalOpen = () => setModalOpen(true);
   const handleModalClose = () => setModalOpen(false);
+
+  const handleResultModalOpen = () => setResultModalOpen(true);
+  const handleResultModalClose = () => setResultModalOpen(false);
 
   useEffect(() => {
     webgazer
@@ -265,6 +270,14 @@ const VideoPlayer = () => {
             setModalOpen={setModalOpen}
             handleModalOpen={handleModalOpen}
             handleModalClose={handleModalClose}
+            handleNextVideo={handleNextVideo}
+          />
+          <ResultsModal
+            setModalResponses={setModalResponses}
+            modalOpen={resultModalOpen}
+            setModalOpen={setResultModalOpen}
+            handleModalOpen={handleResultModalOpen}
+            handleModalClose={handleResultModalClose}
             handleNextVideo={handleNextVideo}
           />
         </Grid>

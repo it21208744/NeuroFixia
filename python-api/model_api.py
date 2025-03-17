@@ -226,8 +226,8 @@ def predict_combined_endpoint():
         # Combine results using weighted average
         weights = {
             'behavior': 0.4,  # Weight for behavior model
-            'heatmap': 0.3,   # Weight for heatmap model
-            'asd': 0.3        # Weight for ASD model
+            'heatmap': 0.4,   # Weight for heatmap model
+            'asd': 0.2        # Weight for ASD model
         }
 
         # Map predictions to numerical values
