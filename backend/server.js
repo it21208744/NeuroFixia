@@ -8,6 +8,7 @@ const cors = require('cors')
 const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
+const FormData = require('form-data')
 
 const app = express()
 connectDB()
@@ -21,6 +22,20 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
 })
 const upload = multer({ storage: storage })
+
+// Function to clean up the uploads directory
+const cleanupUploads = () => {
+  const directory = 'uploads'
+  fs.readdir(directory, (err, files) => {
+    if (err) throw err
+
+    for (const file of files) {
+      fs.unlink(path.join(directory, file), (err) => {
+        if (err) throw err
+      })
+    }
+  })
+}
 
 // Unified route to handle video, image, and form data
 app.post(
@@ -51,6 +66,7 @@ app.post(
       // Cleanup uploaded files
       if (videoPath) fs.unlinkSync(videoPath)
       if (imagePath) fs.unlinkSync(imagePath)
+      cleanupUploads() // Cleanup the uploads directory
     } catch (error) {
       console.error(error)
       res.status(500).json({ success: false, message: 'Processing failed' })
@@ -74,6 +90,7 @@ app.post('/api/analyze-video', upload.single('video'), async (req, res) => {
 
     // Cleanup uploaded file
     fs.unlinkSync(videoPath)
+    cleanupUploads() // Cleanup the uploads directory
 
     // Send the response from the Python API back to the client
     res.json(pythonApiResponse.data)
@@ -99,6 +116,7 @@ app.post('/api/analyze-heatmap', upload.single('image'), async (req, res) => {
 
     // Cleanup uploaded file
     fs.unlinkSync(imagePath)
+    cleanupUploads() // Cleanup the uploads directory
 
     // Send the response from the Python API back to the client
     res.json(pythonApiResponse.data)
@@ -140,25 +158,54 @@ app.post(
       const imagePath = req.files['image']
         ? path.resolve(req.files['image'][0].path).replace(/\\/g, '/')
         : null
+
       const expressions = req.body.expressions
+        ? JSON.parse(req.body.expressions).map((expr) =>
+            expr.replace(/"/g, "'")
+          )
+        : null
 
       console.log('Video Path:', videoPath)
       console.log('Image Path:', imagePath)
       console.log('Expressions:', expressions)
 
-      // Call the Python API for combined prediction
+      // Create a FormData object
+      const formData = new FormData()
+
+      // Append video file if it exists
+      if (videoPath) {
+        formData.append('video', fs.createReadStream(videoPath), {
+          filename: path.basename(videoPath),
+        })
+      }
+
+      // Append image file if it exists
+      if (imagePath) {
+        formData.append('image', fs.createReadStream(imagePath), {
+          filename: path.basename(imagePath),
+        })
+      }
+
+      // Append expressions if they exist
+      if (expressions) {
+        formData.append('expressions', JSON.stringify(expressions))
+      }
+
+      // Send the FormData object to the Flask API
       const pythonApiResponse = await axios.post(
         'http://127.0.0.1:5002/predict-combined',
+        formData,
         {
-          video_path: videoPath,
-          image_path: imagePath,
-          expressions: expressions,
+          headers: {
+            ...formData.getHeaders(), // Include the correct headers for multipart/form-data
+          },
         }
       )
 
       // Cleanup uploaded files
       if (videoPath) fs.unlinkSync(videoPath)
       if (imagePath) fs.unlinkSync(imagePath)
+      cleanupUploads() // Cleanup the uploads directory
 
       // Send the response from the Python API back to the client
       res.json(pythonApiResponse.data)
