@@ -69,7 +69,7 @@ export default function FormModal({
               <FormControlLabel value="Angry" control={<Radio />} label="Angry" />
               <FormControlLabel value="Surprised" control={<Radio />} label="Surprised" />
               <FormControlLabel value="Scared" control={<Radio />} label="Scared" />
-              <FormControlLabel value="noAnswer" control={<Radio />} label="No answer" />
+              <FormControlLabel value="No answer" control={<Radio />} label="No answer" />
             </RadioGroup>
             <Stack direction="row" justifyContent="center">
               <Button variant="contained" color="success" onClick={handleNext}>
