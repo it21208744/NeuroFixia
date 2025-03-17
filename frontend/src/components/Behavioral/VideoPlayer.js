@@ -11,6 +11,7 @@ import FormModal from "./FormModal";
 import { Pause } from "@mui/icons-material";
 import Button from "@mui/material/Button";
 import axios from "axios";
+import LineArtCanvas from "./LineArtCanvas";
 
 const VideoPlayer = () => {
   const [modalResponses, setModalResponses] = useState([]);
@@ -256,6 +257,8 @@ const VideoPlayer = () => {
             onChange={handleImageUpload}
             style={{ position: "fixed", right: "2rem", bottom: "18rem", zIndex: 99 }}
           />
+
+          {downloadUrl && <LineArtCanvas points={gazeCoordinates} />}
           <FormModal
             setModalResponses={setModalResponses}
             modalOpen={modalOpen}
