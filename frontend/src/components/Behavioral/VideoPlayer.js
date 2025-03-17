@@ -10,9 +10,13 @@ import video4 from "assets/behavioral/videos/surprised.mp4";
 import FormModal from "./FormModal";
 import { Pause } from "@mui/icons-material";
 import Button from "@mui/material/Button";
+import axios from "axios";
+import LineArtCanvas from "./LineArtCanvas";
+import ResultsModal from "./ResultsModal";
 
 const VideoPlayer = () => {
   const [modalResponses, setModalResponses] = useState([]);
+  const [apiRes, setApiRes] = useState({});
   const [webGazerAvailability, setWebGazerAvailability] = useState(false);
   const [gazeCoordinates, setGazeCoordinates] = useState([]);
   const collectGazeDataRef = useRef(false);
@@ -22,12 +26,20 @@ const VideoPlayer = () => {
   const playerRef = useRef(null);
   const videoElementRef = useRef(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [resultModalOpen, setResultModalOpen] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [recordedChunks, setRecordedChunks] = useState([]);
   const [downloadUrl, setDownloadUrl] = useState("");
+  const [uploadedImage, setUploadedImage] = useState(null); // State to store the uploaded image
+
+  // Constant image file for now
+  const constantImage = "src/assets/images/behavioral/exampleHeatMap.png"; // Ensure this path is correct and accessible
 
   const handleModalOpen = () => setModalOpen(true);
   const handleModalClose = () => setModalOpen(false);
+
+  const handleResultModalOpen = () => setResultModalOpen(true);
+  const handleResultModalClose = () => setResultModalOpen(false);
 
   useEffect(() => {
     webgazer
@@ -135,15 +147,64 @@ const VideoPlayer = () => {
       console.log("Final Modal Responses:", [...modalResponses, response]); // Log final responses
       console.log("Final Gaze Coordinates:", gazeCoordinates);
       stopRecording(); // Stop recording after the 4th modal
+      sendDataToAPI();
     }
     collectGazeDataRef.current = false;
     handleModalClose();
   };
 
-  // Function to log all gaze data and form data
+  // Function to handle image upload
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setUploadedImage(file);
+    }
+  };
+
+  // Function to send data to the API
+  const sendDataToAPI = async () => {
+    try {
+      setResultModalOpen(true);
+      const formData = new FormData();
+
+      // Append the recorded video if available
+      if (downloadUrl) {
+        const videoBlob = await fetch(downloadUrl).then((res) => res.blob());
+        formData.append("video", videoBlob, "recorded-video.webm");
+      }
+
+      // Append the uploaded image if available, otherwise use the constant image
+      if (uploadedImage) {
+        formData.append("image", uploadedImage, uploadedImage.name);
+      } else {
+        const imageResponse = await fetch(constantImage);
+        const imageBlob = await imageResponse.blob();
+        formData.append("image", imageBlob, "exampleHeatMap.png");
+      }
+
+      // Append the modal responses (form data)
+      if (modalResponses.length > 0) {
+        formData.append("expressions", JSON.stringify(modalResponses));
+      }
+
+      // Send the request to the API
+      const response = await axios.post("http://localhost:5000/api/analyze-combined", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      setApiRes(response.data);
+      console.log("API Response:", response.data);
+    } catch (error) {
+      console.error("Error sending data to API:", error);
+    }
+  };
+
+  // Function to log all gaze data and form data, and send it to the API
   const logAllData = () => {
     console.log("All Modal Responses (Form Data):", modalResponses);
     console.log("All Gaze Coordinates (Gaze Data):", gazeCoordinates);
+    sendDataToAPI(); // Send data to the API
   };
 
   return (
@@ -181,7 +242,7 @@ const VideoPlayer = () => {
           <Button
             variant="contained"
             color="secondary"
-            onClick={logAllData} // Log all data when clicked
+            onClick={logAllData} // Log all data and send to API when clicked
             style={{ position: "fixed", right: "2rem", bottom: "10rem", zIndex: 99 }}
           >
             Log All Data
@@ -190,13 +251,21 @@ const VideoPlayer = () => {
             <Button
               variant="contained"
               color="success"
-              href={downloadUrl}
-              download="recorded-video.webm"
+              onClick={() => sendDataToAPI()}
               style={{ position: "fixed", right: "2rem", bottom: "14rem", zIndex: 99 }}
             >
               Download Video
             </Button>
           )}
+          {/* Input field for image upload */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            style={{ position: "fixed", right: "2rem", bottom: "18rem", zIndex: 99 }}
+          />
+
+          {downloadUrl && <LineArtCanvas points={gazeCoordinates} />}
           <FormModal
             setModalResponses={setModalResponses}
             modalOpen={modalOpen}
@@ -204,6 +273,15 @@ const VideoPlayer = () => {
             handleModalOpen={handleModalOpen}
             handleModalClose={handleModalClose}
             handleNextVideo={handleNextVideo}
+          />
+          <ResultsModal
+            setModalResponses={setModalResponses}
+            modalOpen={resultModalOpen}
+            setModalOpen={setResultModalOpen}
+            handleModalOpen={handleResultModalOpen}
+            handleModalClose={handleResultModalClose}
+            handleNextVideo={handleNextVideo}
+            data={apiRes}
           />
         </Grid>
       </Grid>
