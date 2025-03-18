@@ -111,11 +111,12 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
               >
                 <h3>Facial Expressions Recognition</h3>
                 <p>
-                  The probability of accurate facial expression recognition is{" "}
+                  The probability of not showing autistic traits is{" "}
                   {data.details.facial_expressions_recognition.confidence !== null
-                    ? `${(data.details.facial_expressions_recognition.confidence * 100).toFixed(
-                        2
-                      )}%`
+                    ? `${(
+                        100 -
+                        data.details.facial_expressions_recognition.confidence * 100
+                      ).toFixed(2)}%`
                     : "N/A"}
                   .
                 </p>
@@ -126,12 +127,12 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
                     {data.details.facial_expressions_recognition.confidence !== null
                       ? (() => {
                           const confidence =
-                            data.details.facial_expressions_recognition.confidence * 100;
+                            100 - data.details.facial_expressions_recognition.confidence * 100;
                           if (confidence < 60)
-                            return "Has difficulty recognizing facial expressions.";
+                            return "Strong ability to recognize facial expressions.";
                           if (confidence < 75)
                             return "Moderate ability to recognize facial expressions.";
-                          return "Strong ability to recognize facial expressions.";
+                          return "Has difficulty recognizing facial expressions.";
                         })()
                       : "N/A"}
                   </strong>
@@ -149,9 +150,9 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
               >
                 <h3>Heatmap Analysis</h3>
                 <p>
-                  The probability of focused gaze patterns is{" "}
+                  The probability of not showing autistic traits is{" "}
                   {data.details.heatmap.confidence !== null
-                    ? `${(data.details.heatmap.confidence * 100).toFixed(2)}%`
+                    ? `${(100 - data.details.heatmap.confidence * 100).toFixed(2)}%`
                     : "N/A"}
                   .
                 </p>
@@ -161,10 +162,10 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
                   <strong>
                     {data.details.heatmap.confidence !== null
                       ? (() => {
-                          const confidence = data.details.heatmap.confidence * 100;
-                          if (confidence < 60) return "Displays inconsistent gaze patterns.";
+                          const confidence = 100 - data.details.heatmap.confidence * 100;
+                          if (confidence < 60) return "Displays strong, focused gaze patterns.";
                           if (confidence < 75) return "Moderate focus in gaze patterns.";
-                          return "Displays strong, focused gaze patterns.";
+                          return "Displays inconsistent gaze patterns.";
                         })()
                       : "N/A"}
                   </strong>
