@@ -111,7 +111,7 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
               >
                 <h3>Facial Expressions Recognition</h3>
                 <p>
-                  The probability of not showing autistic traits is{" "}
+                  The probability of showing autistic traits is{" "}
                   {data.details.facial_expressions_recognition.confidence !== null
                     ? `${(
                         100 -
@@ -150,7 +150,7 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
               >
                 <h3>Heatmap Analysis</h3>
                 <p>
-                  The probability of not showing autistic traits is{" "}
+                  The probability of showing autistic traits is{" "}
                   {data.details.heatmap.confidence !== null
                     ? `${(100 - data.details.heatmap.confidence * 100).toFixed(2)}%`
                     : "N/A"}
