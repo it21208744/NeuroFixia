@@ -254,7 +254,7 @@ const VideoPlayer = () => {
               onClick={() => sendDataToAPI()}
               style={{ position: "fixed", right: "2rem", bottom: "14rem", zIndex: 99 }}
             >
-              Download Video
+              Get results
             </Button>
           )}
           {/* Input field for image upload */}
