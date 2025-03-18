@@ -78,10 +78,15 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
               >
                 <h3>Behavioral Risk</h3>
                 <p>
-                  Prediction: <strong>{data.details.behavior.prediction || "N/A"}</strong>
+                  The probability of showing autistic traits is{" "}
+                  {data.details.behavior.confidence !== null
+                    ? `${(data.details.behavior.confidence * 100).toFixed(2)}%`
+                    : "N/A"}
+                  .
                 </p>
+
                 <p>
-                  Confidence:{" "}
+                  Prediction:{" "}
                   <strong>
                     {data.details.behavior.confidence !== null
                       ? (() => {
@@ -106,13 +111,29 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
               >
                 <h3>Facial Expressions Recognition</h3>
                 <p>
-                  Prediction:{" "}
-                  <strong>{data.details.facial_expressions_recognition.prediction}</strong>
+                  The probability of accurate facial expression recognition is{" "}
+                  {data.details.facial_expressions_recognition.confidence !== null
+                    ? `${(data.details.facial_expressions_recognition.confidence * 100).toFixed(
+                        2
+                      )}%`
+                    : "N/A"}
+                  .
                 </p>
+
                 <p>
-                  Confidence:{" "}
+                  Prediction:{" "}
                   <strong>
-                    {(data.details.facial_expressions_recognition.confidence * 100).toFixed(2)}%
+                    {data.details.facial_expressions_recognition.confidence !== null
+                      ? (() => {
+                          const confidence =
+                            data.details.facial_expressions_recognition.confidence * 100;
+                          if (confidence < 60)
+                            return "Has difficulty recognizing facial expressions.";
+                          if (confidence < 75)
+                            return "Moderate ability to recognize facial expressions.";
+                          return "Strong ability to recognize facial expressions.";
+                        })()
+                      : "N/A"}
                   </strong>
                 </p>
               </div>
@@ -128,10 +149,25 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
               >
                 <h3>Heatmap Analysis</h3>
                 <p>
-                  Prediction: <strong>{data.details.heatmap.prediction}</strong>
+                  The probability of focused gaze patterns is{" "}
+                  {data.details.heatmap.confidence !== null
+                    ? `${(data.details.heatmap.confidence * 100).toFixed(2)}%`
+                    : "N/A"}
+                  .
                 </p>
+
                 <p>
-                  Confidence: <strong>{(data.details.heatmap.confidence * 100).toFixed(2)}%</strong>
+                  Prediction:{" "}
+                  <strong>
+                    {data.details.heatmap.confidence !== null
+                      ? (() => {
+                          const confidence = data.details.heatmap.confidence * 100;
+                          if (confidence < 60) return "Displays inconsistent gaze patterns.";
+                          if (confidence < 75) return "Moderate focus in gaze patterns.";
+                          return "Displays strong, focused gaze patterns.";
+                        })()
+                      : "N/A"}
+                  </strong>
                 </p>
               </div>
 
@@ -150,7 +186,11 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
                   <span style={{ color: "#007b00" }}>{data.final_prediction}</span>
                 </h3>
                 <p>
-                  Confidence: <strong>{(data.combined_confidence * 100).toFixed(2)}%</strong>
+                  There is{" "}
+                  {data.combined_confidence !== null
+                    ? `${(data.combined_confidence * 100).toFixed(2)}%`
+                    : "N/A"}{" "}
+                  likelihood of exhibiting autistic traits.
                 </p>
               </div>
             </div>
