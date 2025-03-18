@@ -84,7 +84,12 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
                   Confidence:{" "}
                   <strong>
                     {data.details.behavior.confidence !== null
-                      ? `${(data.details.behavior.confidence * 100).toFixed(2)}%`
+                      ? (() => {
+                          const confidence = data.details.behavior.confidence * 100;
+                          if (confidence < 60) return "Exhibits no autistic behaviors.";
+                          if (confidence < 75) return "Exhibits mild autistic behaviors.";
+                          return "Exhibits severe autistic behaviors.";
+                        })()
                       : "N/A"}
                   </strong>
                 </p>
