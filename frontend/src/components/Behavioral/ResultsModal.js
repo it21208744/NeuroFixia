@@ -77,15 +77,15 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
                 }}
               >
                 <h3>Behavioral Risk</h3>
-                <p>
+                {/* <p>
                   The probability of showing autistic traits is{" "}
                   {data.details.behavior.confidence !== null
                     ? `${(100 - data.details.behavior.confidence * 100).toFixed(2)}%`
                     : "N/A"}
                   .
-                </p>
+                </p> */}
 
-                {/* <p>
+                <p>
                   Prediction:{" "}
                   <strong>
                     {data.details.behavior.confidence !== null
@@ -96,7 +96,7 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
                         })()
                       : "N/A"}
                   </strong>
-                </p> */}
+                </p>
               </div>
 
               {/* Facial Expressions Section */}
