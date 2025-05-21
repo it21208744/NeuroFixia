@@ -16,6 +16,14 @@ Coded by www.creative-tim.com
 // @mui material components
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import Box from "@mui/material/Box";
+import prettier from "prettier";
+import React, { useState, createContext, useContext } from "react";
+
+// Create context
+export const LangContext = createContext();
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
@@ -31,77 +39,59 @@ import DataTable from "examples/Tables/DataTable";
 import authorsTableData from "layouts/tables/data/authorsTableData";
 import projectsTableData from "layouts/tables/data/projectsTableData";
 
+//mysocial
+import InitialQuestion from "components/SocialSkills/InitialQuestion";
+import Questionnaire from "components/SocialSkills/Questionnaire";
+import AllSales from "components/SocialSkills/AllSales";
+import Simon from "components/SocialSkills/Simon";
+import Progress from "components/SocialSkills/Progress";
+
 function Tables() {
+  const [value, setValue] = useState("one");
+  const [lang, setLang] = useState("");
+
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+  };
+
   const { columns, rows } = authorsTableData();
   const { columns: pColumns, rows: pRows } = projectsTableData();
 
   return (
-    <DashboardLayout>
-      <DashboardNavbar />
-      <MDBox pt={6} pb={3}>
-        <Grid container spacing={6}>
-          <Grid item xs={12}>
-            sample page social
-          </Grid>
-
-          {/* <Grid item xs={12}>
-            <Card>
-              <MDBox
-                mx={2}
-                mt={-3}
-                py={3}
-                px={2}
-                variant="gradient"
-                bgColor="info"
-                borderRadius="lg"
-                coloredShadow="info"
+    <LangContext.Provider value={{ value, setValue, lang, setLang }}>
+      <DashboardLayout>
+        <DashboardNavbar />
+        <MDBox pt={6} pb={3}>
+          <Grid container spacing={6}>
+            <Grid item xs={12}>
+              <MDTypography variant="h6" gutterBottom>
+                Sample Page Social
+              </MDTypography>
+              <Tabs
+                value={value}
+                onChange={handleChange}
+                textColor="secondary"
+                indicatorColor="secondary"
+                aria-label="Social skills"
               >
-                <MDTypography variant="h6" color="white">
-                  Authors Table
-                </MDTypography>
-              </MDBox>
-              <MDBox pt={3}>
-                <DataTable
-                  table={{ columns, rows }}
-                  isSorted={false}
-                  entriesPerPage={false}
-                  showTotalEntries={false}
-                  noEndBorder
-                />
-              </MDBox>
-            </Card>
+                <Tab value="one" label="InitialQuestion" />
+                <Tab value="two" label="Questionnaire" />
+                <Tab value="three" label="AllSales" />
+                <Tab value="four" label="Simon" />
+                <Tab value="five" label="Progress" />
+              </Tabs>
+            </Grid>
+            <Grid item xs={12}>
+              {value === "one" && <InitialQuestion />}
+              {value === "two" && <Questionnaire />}
+              {value === "three" && <AllSales />}
+              {value === "four" && <Simon />}
+              {value === "five" && <Progress />}
+            </Grid>
           </Grid>
-          <Grid item xs={12}>
-            <Card>
-              <MDBox
-                mx={2}
-                mt={-3}
-                py={3}
-                px={2}
-                variant="gradient"
-                bgColor="info"
-                borderRadius="lg"
-                coloredShadow="info"
-              >
-                <MDTypography variant="h6" color="white">
-                  Projects Table
-                </MDTypography>
-              </MDBox>
-              <MDBox pt={3}>
-                <DataTable
-                  table={{ columns: pColumns, rows: pRows }}
-                  isSorted={false}
-                  entriesPerPage={false}
-                  showTotalEntries={false}
-                  noEndBorder
-                />
-              </MDBox>
-            </Card>
-          </Grid> */}
-        </Grid>
-      </MDBox>
-      {/* <Footer /> */}
-    </DashboardLayout>
+        </MDBox>
+      </DashboardLayout>
+    </LangContext.Provider>
   );
 }
 
