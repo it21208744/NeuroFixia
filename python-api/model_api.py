@@ -11,7 +11,7 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import joblib
 import json  # Add this import
 
-# test
+
 app = Flask(__name__)
 
 # Load the trained models
@@ -124,44 +124,30 @@ def predict_asd(expressions):
 @app.route('/predict-combined', methods=['POST'])
 def predict_combined_endpoint():
     try:
-        # Log the request data for debugging
-        print("Request Files:", request.files)
         print("Request Form:", request.form)
 
-        # Get uploaded files and form data
-        video_file = request.files.get('video')
-        image_file = request.files.get('image')
+        # Parse expressions
         expressions = request.form.get('expressions')
-
-        # Log the received data
-        print("Video File:", video_file)
-        print("Image File:", image_file)
-        print("Expressions:", expressions)
-
-        # Save uploaded files temporarily
-        video_path = None
-        image_path = None
-
-        if video_file:
-            video_path = f"uploads/{video_file.filename}"
-            video_file.save(video_path)
-            print("Video Path:", video_path)
-
-        if image_file:
-            image_path = f"uploads/{image_file.filename}"
-            image_file.save(image_path)
-            print("Image Path:", image_path)
-
-        # Parse expressions (if provided)
         if expressions:
             try:
-                expressions = json.loads(expressions)  # Safely parse JSON string
+                expressions = json.loads(expressions)
                 print("Parsed Expressions:", expressions)
             except json.JSONDecodeError as e:
                 print("Error parsing expressions:", e)
                 return jsonify({'error': 'Invalid expressions format. Expected a JSON array.'}), 400
         else:
             expressions = None
+
+        # Load video and image from predefined folders
+        video_folder = 'testFiles/video'
+        image_folder = 'testFiles/heatMap'
+
+        # Get the first file from each folder
+        video_path = next((os.path.join(video_folder, f) for f in os.listdir(video_folder) if f.endswith(('.mp4', '.avi'))), None)
+        image_path = next((os.path.join(image_folder, f) for f in os.listdir(image_folder) if f.endswith(('.png', '.jpg', '.jpeg'))), None)
+
+        print("Using Video Path:", video_path)
+        print("Using Image Path:", image_path)
 
         # Initialize results
         behavior_result = None
@@ -182,8 +168,8 @@ def predict_combined_endpoint():
 
         if image_path:
             heatmap_confidence = predict_heatmap(image_path)
-            print("Heatmap Confidence:", heatmap_confidence)
             heatmap_result = "ASD" if heatmap_confidence <= 0.5 else "Non-ASD"
+            print("Heatmap Confidence:", heatmap_confidence)
             print("Heatmap Result:", heatmap_result)
 
         if expressions:
@@ -191,22 +177,21 @@ def predict_combined_endpoint():
             print("ASD Result:", asd_result)
             print("ASD Confidence:", asd_confidence)
 
-        # Combine results using weighted average of confidence scores
+        # Combine results using weighted average
         weights = {
-            'behavior': 0.4,  # Weight for behavior model
-            'heatmap': 0.4,   # Weight for heatmap model
-            'asd': 0.2        # Weight for ASD model
+            'behavior': 0.4,
+            'heatmap': 0.4,
+            'asd': 0.2
         }
 
-        # Map predictions to numerical values
         prediction_map = {
             'autism': 1,
             'TD': 0,
             'ASD': 1,
-            'NON ASD': 0
+            'NON ASD': 0,
+            'Non-ASD': 0
         }
 
-        # Calculate weighted sum of confidence scores
         weighted_sum = 0
         total_weight = 0
 
@@ -231,13 +216,6 @@ def predict_combined_endpoint():
         combined_prediction = weighted_sum / total_weight
         final_result = 'autism' if combined_prediction > 0.5 else 'non-autism'
 
-        # Cleanup uploaded files
-        if video_path and os.path.exists(video_path):
-            os.remove(video_path)
-        if image_path and os.path.exists(image_path):
-            os.remove(image_path)
-
-        # Return the combined result with confidence scores
         return jsonify({
             'final_prediction': final_result,
             'combined_confidence': float(combined_prediction),
@@ -256,12 +234,8 @@ def predict_combined_endpoint():
                 }
             }
         })
+
     except Exception as e:
-        # Cleanup uploaded files in case of an error
-        if video_path and os.path.exists(video_path):
-            os.remove(video_path)
-        if image_path and os.path.exists(image_path):
-            os.remove(image_path)
         return jsonify({'error': str(e)}), 500
 
 # @app.route('/test-combined', methods=['GET'])
