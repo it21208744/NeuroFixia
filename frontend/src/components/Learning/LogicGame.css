@@ -1,0 +1,65 @@
+/* LogicGame.css */
+.logic-game {
+  padding: 15px;
+  background-color: #aa3939;
+  border-radius: 5px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  max-width: 350px;
+  margin: 0 auto;
+}
+
+.logic-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 80px);
+  grid-template-rows: repeat(4, 80px);
+  border: 1px solid #550000;
+}
+
+.logic-grid button {
+  background-color: #cfcfcf;
+  color: #003333;
+  font-size: 24px;
+  font-weight: bold;
+  border: 1px solid #550000;
+  cursor: pointer;
+}
+
+.logic-footer {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.logic-footer button {
+  border: none;
+  font-size: 20px;
+  font-weight: bold;
+  border-radius: 5px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  padding: 5px;
+  width: 80px;
+  background-color: #d4ee9f;
+  color: #003333;
+  cursor: pointer;
+}
+
+.logic-footer button:hover {
+  color: #d4ee9f;
+  background-color: #003333;
+}
+
+.logic-footer span {
+  flex: 1;
+  text-align: center;
+  font-size: 20px;
+  color: #d4ee9f;
+  font-weight: bold;
+  margin: auto 0;
+}
+
+.logic-message {
+  color: #fff;
+  text-align: center;
+  margin-top: 10px;
+  font-weight: bold;
+}

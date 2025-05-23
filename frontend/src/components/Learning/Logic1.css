@@ -1,0 +1,73 @@
+.activity-container {
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.shuffled-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.shuffled-container img {
+  width: 190px;
+  height: 190px;
+  object-fit: cover;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  cursor: grab;
+}
+
+.drop-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.drop-box {
+  width: 190px;
+  height: 190px;
+  border: 2px dashed #888;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f8f8;
+  font-size: 18px;
+  font-weight: bold;
+  color: #555;
+}
+
+.drop-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.sebutton {
+  margin-top: 30px;
+  padding: 10px 20px;
+  width: 150px;
+  height: 50px;
+  font-size: 26px;
+  border: none;
+  background-color: #171637;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.sebutton:hover {
+  background-color: #483f82;
+}
+.sequential-header {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #16244d;
+  text-align: center;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: "Arial", sans-serif;
+}

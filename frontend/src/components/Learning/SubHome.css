@@ -1,0 +1,51 @@
+/* Game Section */
+.subHome-game-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Spacing between cards */
+  margin-top: 40px;
+}
+
+.subHome-game-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  border: 2px solid #0047ab; /* Blue border */
+  border-radius: 10px;
+  background-color: #d9d9e9f5; /* White background */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  width: 260px;
+  text-align: center;
+  margin-right: 10px;
+}
+
+.subHome-game-image {
+  width: 250px;
+  height: 250px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.subHome-game-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #0047ab;
+  margin-bottom: 10px;
+}
+
+.subHome-game-button {
+  padding: 8px 15px;
+  font-size: 16px;
+  color: #fff;
+  background-color: #11243d;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.subHome-game-button:hover {
+  background-color: #003b91; /* Darker blue on hover */
+}
