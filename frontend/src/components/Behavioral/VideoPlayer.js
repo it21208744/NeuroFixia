@@ -1,3 +1,4 @@
+// Add this at the top with other imports
 import { useEffect, useRef, useState } from "react";
 import Grid from "@mui/material/Grid";
 import MDBox from "components/MDBox";
@@ -8,7 +9,6 @@ import video2 from "assets/behavioral/videos/angry.mp4";
 import video3 from "assets/behavioral/videos/happy.mp4";
 import video4 from "assets/behavioral/videos/surprised.mp4";
 import FormModal from "./FormModal";
-import { Pause } from "@mui/icons-material";
 import Button from "@mui/material/Button";
 import axios from "axios";
 import LineArtCanvas from "./LineArtCanvas";
@@ -27,23 +27,22 @@ const VideoPlayer = () => {
   const videoElementRef = useRef(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [resultModalOpen, setResultModalOpen] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [recordedChunks, setRecordedChunks] = useState([]);
-  const [downloadUrl, setDownloadUrl] = useState("");
-  const [uploadedImage, setUploadedImage] = useState(null); // State to store the uploaded image
+  const [uploadedImage, setUploadedImage] = useState(null);
 
-  // Constant image file for now
-  const constantImage = "src/assets/images/behavioral/exampleHeatMap.png"; // Ensure this path is correct and accessible
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const recordedChunksRef = useRef([]); // ✅ Using ref instead of state
+  const [downloadUrl, setDownloadUrl] = useState("");
+
+  const constantImage = "src/assets/images/behavioral/exampleHeatMap.png";
 
   const handleModalOpen = () => setModalOpen(true);
   const handleModalClose = () => setModalOpen(false);
-
   const handleResultModalOpen = () => setResultModalOpen(true);
   const handleResultModalClose = () => setResultModalOpen(false);
 
   useEffect(() => {
     webgazer
-      .setGazeListener((data, timeStamp) => {
+      .setGazeListener((data) => {
         if (data) {
           setWebGazerAvailability(true);
         }
@@ -68,9 +67,8 @@ const VideoPlayer = () => {
 
       if (videoElement) {
         const handleVideoEnd = () => {
-          collectGazeDataRef.current = false; // Stop collecting gaze data
+          collectGazeDataRef.current = false;
           if (vidId <= 3) {
-            // Open modal for all videos (including the 4th)
             handleModalOpen();
           }
         };
@@ -88,21 +86,24 @@ const VideoPlayer = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
 
+      recordedChunksRef.current = []; // ✅ reset buffer
+
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          setRecordedChunks((prev) => [...prev, event.data]);
+          recordedChunksRef.current.push(event.data); // ✅ use ref
         }
       };
 
       recorder.onstop = () => {
-        const blob = new Blob(recordedChunks, { type: "video/webm" });
-        setDownloadUrl(URL.createObjectURL(blob));
+        const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+        setDownloadUrl(url);
       };
 
-      recorder.start(1000); // Capture data every 1 second
+      recorder.start();
       setMediaRecorder(recorder);
     } catch (error) {
-      console.error("Error starting recording:", error);
+      console.error("Error accessing webcam:", error);
     }
   };
 
@@ -115,15 +116,13 @@ const VideoPlayer = () => {
 
   const handlePlayVideo = () => {
     if (vidId < 4) {
-      // Only play if it's not the last video
       collectGazeDataRef.current = true;
-      console.log("useRef", collectGazeDataRef.current);
+      startRecording();
       if (videoElementRef.current) {
         videoElementRef.current
           .play()
           .then(() => {
             setIsPlaying(true);
-            startRecording(); // Start recording when video starts playing
           })
           .catch((error) => console.log("Play failed:", error));
       }
@@ -131,29 +130,23 @@ const VideoPlayer = () => {
   };
 
   const handleNextVideo = (response) => {
-    setModalResponses((prevRes) => [...prevRes, response]); // Add response to modalResponses
-    console.log("Modal Responses:", modalResponses);
+    setModalResponses((prevRes) => [...prevRes, response]);
 
     if (vidId < 3) {
-      // Only proceed if it's not the last video
       collectGazeDataRef.current = true;
-      setVidId((prev) => {
-        const nextVidId = (prev + 1) % videoList.length;
-        return nextVidId;
-      });
-      setTimeout(() => handlePlayVideo(), 100); // Ensure video is loaded before playing
+      setVidId((prev) => (prev + 1) % videoList.length);
+      setTimeout(() => handlePlayVideo(), 100);
     } else {
       console.log("All videos completed. Data collection stopped.");
-      console.log("Final Modal Responses:", [...modalResponses, response]); // Log final responses
+      console.log("Final Modal Responses:", [...modalResponses, response]);
       console.log("Final Gaze Coordinates:", gazeCoordinates);
-      stopRecording(); // Stop recording after the 4th modal
+      stopRecording();
       sendDataToAPI();
     }
     collectGazeDataRef.current = false;
     handleModalClose();
   };
 
-  // Function to handle image upload
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -161,19 +154,16 @@ const VideoPlayer = () => {
     }
   };
 
-  // Function to send data to the API
   const sendDataToAPI = async () => {
     try {
       setResultModalOpen(true);
       const formData = new FormData();
 
-      // Append the recorded video if available
       if (downloadUrl) {
         const videoBlob = await fetch(downloadUrl).then((res) => res.blob());
         formData.append("video", videoBlob, "recorded-video.webm");
       }
 
-      // Append the uploaded image if available, otherwise use the constant image
       if (uploadedImage) {
         formData.append("image", uploadedImage, uploadedImage.name);
       } else {
@@ -182,12 +172,10 @@ const VideoPlayer = () => {
         formData.append("image", imageBlob, "exampleHeatMap.png");
       }
 
-      // Append the modal responses (form data)
       if (modalResponses.length > 0) {
         formData.append("expressions", JSON.stringify(modalResponses));
       }
 
-      // Send the request to the API
       const response = await axios.post("http://localhost:5000/api/analyze-combined", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -200,11 +188,10 @@ const VideoPlayer = () => {
     }
   };
 
-  // Function to log all gaze data and form data, and send it to the API
   const logAllData = () => {
     console.log("All Modal Responses (Form Data):", modalResponses);
     console.log("All Gaze Coordinates (Gaze Data):", gazeCoordinates);
-    sendDataToAPI(); // Send data to the API
+    sendDataToAPI();
   };
 
   return (
@@ -229,12 +216,12 @@ const VideoPlayer = () => {
             sx={{ cursor: "pointer" }}
             onClick={handlePlayVideo}
           >
-            <PlayCircleFilledWhiteIcon />
+            Start test
           </MDBox>
           <Button
             variant="contained"
             color="primary"
-            onClick={() => handleNextVideo("")} // Pass an empty response for the button
+            onClick={() => handleNextVideo("")}
             style={{ position: "fixed", right: "2rem", bottom: "6rem", zIndex: 99 }}
           >
             Next Video
@@ -242,7 +229,7 @@ const VideoPlayer = () => {
           <Button
             variant="contained"
             color="secondary"
-            onClick={logAllData} // Log all data and send to API when clicked
+            onClick={logAllData}
             style={{ position: "fixed", right: "2rem", bottom: "10rem", zIndex: 99 }}
           >
             Log All Data
@@ -251,21 +238,20 @@ const VideoPlayer = () => {
             <Button
               variant="contained"
               color="success"
-              onClick={() => sendDataToAPI()}
+              href={downloadUrl}
+              download="recorded-video.webm"
               style={{ position: "fixed", right: "2rem", bottom: "14rem", zIndex: 99 }}
             >
-              Get results
+              Download Recording
             </Button>
           )}
-          {/* Input field for image upload */}
           <input
             type="file"
             accept="image/*"
             onChange={handleImageUpload}
             style={{ position: "fixed", right: "2rem", bottom: "18rem", zIndex: 99 }}
           />
-
-          {downloadUrl && <LineArtCanvas points={gazeCoordinates} />}
+          <LineArtCanvas points={gazeCoordinates} />
           <FormModal
             setModalResponses={setModalResponses}
             modalOpen={modalOpen}
