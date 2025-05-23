@@ -1,0 +1,179 @@
+/* Main Container */
+.calibrator-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+/* Header Section */
+.image-container {
+  margin-bottom: 20px;
+}
+
+.calibrator-image {
+  margin-top: -40px;
+  width: 1000px; /* Adjust image size */
+  height: 300px; /* Maintain aspect ratio */
+  margin-left: -200px;
+}
+
+.student-overlay {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 36px;
+  color: #022233;
+  font-weight: bold;
+  text-align: center;
+  margin-top: -50px;
+  margin-left: -100px;
+  margin-right: -800px;
+}
+
+.calibrator-title {
+  font-size: 32px;
+  font-weight: bold;
+  margin-top: 10px;
+  color: #0047ab;
+}
+
+/* Game Section */
+.game-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Spacing between cards */
+  margin-top: 100px;
+  margin-right: 200px;
+}
+
+.game-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  border: 3px solid #11243d; /* Blue border */
+  border-radius: 10px;
+  background-color: #cdd2f099; /* White background */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  width: 300px;
+  text-align: center;
+  margin-right: 20px;
+}
+
+.game-image {
+  width: 250px;
+  height: 250px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.game-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #0047ab;
+  margin-bottom: 10px;
+}
+
+.game-button {
+  padding: 8px 15px;
+  font-size: 16px;
+  color: #fff;
+  background-color: #11243d;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.game-button:hover {
+  background-color: #003b91; /* Darker blue on hover */
+}
+/* Navbar styling */
+/* Top Navbar Styling Inspired by Sidebar Theme */
+.top-navbar {
+  width: 80%;
+  height: 60px;
+  background: linear-gradient(90deg, #868490, #022242);
+  padding: 15px 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border-bottom-left-radius: 20px;
+  border-top-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+  border-top-right-radius: 20px;
+  font-family: "Arial", sans-serif;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin-left: 250px;
+}
+
+/* Navigation Menu */
+.top-nav-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Navigation Item */
+.top-nav-item {
+  margin-top: -15px;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  font-weight: bold;
+}
+
+.top-nav-item:hover {
+  background: rgba(255, 255, 255, 0.29);
+  transform: translateY(-2px);
+}
+
+/* Dropdown Menu */
+.dropdown-parent {
+  position: relative;
+}
+
+.arrow {
+  margin-left: 5px;
+  font-size: 1px;
+}
+
+/* Dropdown List */
+.top-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #022a52;
+  padding: 10px 0;
+  border-radius: 8px;
+  min-width: 130px;
+  z-index: 999;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.237);
+}
+
+.top-dropdown-menu.show {
+  display: block;
+}
+
+.top-dropdown-item {
+  padding: 10px 20px;
+  color: #c8e6c9;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.top-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+}

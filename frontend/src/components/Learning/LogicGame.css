@@ -1,0 +1,74 @@
+.LO1-logic-game {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  font-family: Arial, sans-serif;
+}
+
+.LO1-logic-card {
+  background-color: #11243d;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  width: fit-content;
+}
+
+.LO1-logic-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 60px);
+  grid-gap: 10px;
+  margin-bottom: 20px;
+}
+
+.LO1-logic-button {
+  width: 60px;
+  height: 60px;
+  font-size: 20px;
+  font-weight: bold;
+  background-color: #f5f5f5;
+  color: #11243d;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.LO1-logic-button:hover {
+  background-color: #ddd;
+}
+
+.LO1-logic-button:disabled {
+  cursor: not-allowed;
+  background-color: #bbb;
+}
+
+.LO1-logic-footer {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 15px;
+  color: #ffffff;
+}
+
+.LO1-logic-control {
+  padding: 8px 16px;
+  border: none;
+  background-color: #00bcd4;
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.LO1-logic-control:hover {
+  background-color: #0097a7;
+}
+
+.LO1-logic-message {
+  margin-top: 15px;
+  color: #00ffae;
+  font-size: 18px;
+  font-weight: bold;
+}

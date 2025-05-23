@@ -1,0 +1,154 @@
+.shadow-game {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  font-size: 18px;
+  margin-left: 25%;
+}
+.ab {
+  margin-left: 32%;
+}
+
+.game-container {
+  display: flex; /* Flexbox to display both game and progress side by side */
+  justify-content: space-between;
+}
+
+.game-area {
+  flex: 1; /* Takes up the left side of the screen */
+}
+
+.original-image {
+  width: 150px;
+  height: 150px;
+  margin-bottom: 10px;
+  margin-top: 3px;
+  border-radius: 10px;
+  padding: 5px;
+  margin-left: 35%;
+}
+
+.shadow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns for shadows */
+  gap: 5px; /* Reduced spacing between grid items */
+  justify-items: center;
+  align-items: center;
+  margin-left: 50%; /* Added margin to the left to push the grid to the center */
+  margin-right: 50%; /* Added margin to the right for equal spacing */
+}
+
+.shadow-button {
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  outline: none;
+  position: relative;
+  width: 100px; /* Width of each button */
+}
+
+.shadow-button img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  transition: transform 0.3s, border-color 0.3s;
+  background-color: #e4a1a1;
+  padding: 5px;
+  margin-left: -10px;
+}
+
+.shadow-button img:hover {
+  border-color: #007bff;
+  transform: scale(1.1);
+}
+
+.feed {
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #007bff;
+  animation: fadeIn 0.5s ease-in-out;
+  margin-left: 40%;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Progress Grid Styling */
+.progress-container {
+  width: 200px;
+  margin-left: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.progress {
+  display: flex;
+  flex-direction: column; /* This ensures the numbers are displayed vertically */
+  gap: 10px;
+  font-size: 18px;
+  margin-left: -100%;
+}
+
+.progress-item {
+  display: flex;
+  justify-content: flex-start; /* Align the numbers to the left */
+  font-weight: bold;
+}
+
+.progress-item span {
+  font-size: 16px;
+}
+
+.progress-item span + span {
+  color: green;
+  font-size: 14px;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .progress-container {
+    width: 100%; /* Make the progress container responsive */
+    margin-left: 10px;
+  }
+
+  .shadow-button img {
+    width: 100px;
+    height: 100px;
+  }
+
+  .progress-container {
+    width: 100%; /* Allow progress to be responsive */
+    margin-left: 10px;
+  }
+}
+.submit-button {
+  margin-top: 20px;
+  padding: 10px 15px;
+  background-color: #11243d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: -100%;
+  width: 250px;
+}
+
+.submit-button:hover {
+  background-color: #0056b3;
+}

@@ -1,0 +1,116 @@
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.blink {
+  animation: blink 1.5s infinite; /* Blinks every 0.5 seconds */
+}
+/* Memory1.css */
+
+/* Apply bold text and increase letter size */
+h1,
+h2,
+buttonm {
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+/* Blinking effect */
+.blink {
+  animation: blink-animation 1s infinite alternate;
+}
+
+@keyframes blink-animation {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
+
+/* Style for Next button */
+buttonm {
+  padding: 12px 24px;
+  background-color: #112841;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin: 20px 80px;
+}
+
+buttonm:hover {
+  background-color: #180f26;
+}
+.child-container {
+  margin: 200px 80px;
+}
+
+.child-name {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #0b0b0b;
+  margin-left: 50px;
+}
+
+.child-container {
+  display: flex;
+  align-items: center; /* Center both child name and image vertically */
+  justify-content: center; /* Center the whole content horizontally */
+  gap: 20px; /* Add space between the name and image */
+  margin: 20px 0; /* Adjust margins */
+}
+.activity-title {
+  font-size: 2.5rem;
+  text-align: center; /* Centers the text horizontally */
+}
+.subtitle {
+  text-align: center;
+}
+
+/* Style for the buttonA */
+.buttonA {
+  padding: 12px 24px; /* Add padding inside the button */
+  background-color: #2e2f47; /* Set a background color */
+  color: white; /* Set text color to white */
+  border: none; /* Remove default border */
+  border-radius: 8px; /* Round the corners */
+  font-size: 1.2rem; /* Set font size */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  transition: background-color 0.3s ease; /* Add smooth background color transition */
+  margin: 10px; /* Add margin around each button */
+  margin-left: 150px;
+  margin-right: -100px;
+}
+
+/* Style for buttonA when hovered */
+.buttonA:hover {
+  background-color: #1e233d; /* Change background color on hover */
+}
+
+/* Style for buttonA when clicked (active state) */
+.buttonA:active {
+  background-color: #1d1a31; /* Change background color when clicked */
+}
+
+/* Style for buttonA when focused */
+.buttonA:focus {
+  outline: none; /* Remove the default focus outline */
+  box-shadow: 0 0 5px 2px rgba(33, 23, 80, 0.4); /* Add a glow effect when focused */
+}
+
+.test-image-left {
+  margin-left: 400px; /* Add margin to the left */
+  display: inline-block;
+}
