@@ -11,7 +11,7 @@ import catImage from "../../components/Cognitive/cat.png";
 import kittenImage from "../../components/Cognitive/kitten.png";
 import chirpSound from "../../components/Cognitive/quickclick.wav";
 import winSound from "../../components/Cognitive/correctselect.mp3";
-import backgroundImage from "../../components/Cognitive/background.webp"; // ✅ your .webp file
+// import backgroundImage from "../../components/Cognitive/background.webp"; // ✅ your .webp file
 
 const rounds = [
   {
@@ -163,7 +163,7 @@ const Logic4 = () => {
     <div
       className="p-4"
       style={{
-        backgroundImage: `url(${backgroundImage})`,
+        // backgroundImage: `url(${backgroundImage})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         minHeight: "100vh",
@@ -178,7 +178,7 @@ const Logic4 = () => {
           gridTemplateColumns: `repeat(${numCols}, 95px)`,
           gridGap: "4px",
           marginBottom: "16px",
-          marginLeft: "560px",
+          marginLeft: "360px",
         }}
       >
         {mazeLayout.map((rowArr, row) => rowArr.map((_, col) => renderCell(row, col)))}
@@ -188,7 +188,7 @@ const Logic4 = () => {
         <button
           onClick={() => handleMove("up")}
           className="p-2 rounded bg-yellow-200"
-          style={{ fontSize: "40px", marginRight: "20px", marginLeft: "650px" }}
+          style={{ fontSize: "40px", marginRight: "20px", marginLeft: "470px" }}
         >
           ⬆️
         </button>
@@ -215,7 +215,7 @@ const Logic4 = () => {
         </button>
       </div>
 
-      <p className="mb-2 text-blue-700 font-semibold" style={{ marginLeft: "650px" }}>
+      <p className="mb-2 text-blue-700 font-semibold" style={{ marginLeft: "580px" }}>
         Moves: {moveCount}
       </p>
 
@@ -227,7 +227,7 @@ const Logic4 = () => {
               fontWeight: "bold",
               fontSize: "18px",
               marginBottom: "8px",
-              marginLeft: "650px",
+              marginLeft: "520px",
             }}
           >
             🎉 Round Completed!
@@ -246,7 +246,7 @@ const Logic4 = () => {
                 fontWeight: "600",
                 fontSize: "16px",
                 border: "none",
-                marginLeft: "650px",
+                marginLeft: "450px",
               }}
             >
               👉 Next Round

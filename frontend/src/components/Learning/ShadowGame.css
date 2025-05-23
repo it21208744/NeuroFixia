@@ -61,7 +61,7 @@
   transition: transform 0.3s, border-color 0.3s;
   background-color: #e4a1a1;
   padding: 5px;
-  margin-left: -300px;
+  margin-left: -10px;
 }
 
 .shadow-button img:hover {
@@ -139,7 +139,7 @@
 .submit-button {
   margin-top: 20px;
   padding: 10px 15px;
-  background-color: #007bff;
+  background-color: #11243d;
   color: white;
   border: none;
   border-radius: 5px;

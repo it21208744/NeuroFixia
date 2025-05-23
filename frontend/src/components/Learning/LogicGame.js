@@ -99,30 +99,33 @@ function LogicGame() {
   };
 
   return (
-    <div className="logic-game">
-      <div className="logic-grid">
-        {grid.map((row, i) =>
-          row.map((cell, j) => (
-            <button
-              key={`${i}-${j}`}
-              onClick={() => handleClickBox(new Box(j, i))}
-              disabled={status !== "playing"}
-            >
-              {cell !== 0 ? cell : ""}
-            </button>
-          ))
-        )}
-      </div>
+    <div className="LO1-logic-game">
+      <div className="LO1-logic-card">
+        <div className="LO1-logic-grid">
+          {grid.map((row, i) =>
+            row.map((cell, j) => (
+              <button
+                key={`${i}-${j}`}
+                onClick={() => handleClickBox(new Box(j, i))}
+                disabled={status !== "playing"}
+                className="LO1-logic-button"
+              >
+                {cell !== 0 ? cell : ""}
+              </button>
+            ))
+          )}
+        </div>
 
-      <div className="logic-footer">
-        <button onClick={handlePlayReset}>
-          {status === "ready" || status === "won" ? "Play" : "Reset"}
-        </button>
-        <span>Move: {moves}</span>
-        <span>Time: {time}</span>
-      </div>
+        <div className="LO1-logic-footer">
+          <button onClick={handlePlayReset} className="LO1-logic-control">
+            {status === "ready" || status === "won" ? "Play" : "Reset"}
+          </button>
+          <span>Move: {moves}</span>
+          <span>Time: {time}</span>
+        </div>
 
-      {status === "won" && <div className="logic-message">You win!</div>}
+        {status === "won" && <div className="LO1-logic-message">You win!</div>}
+      </div>
     </div>
   );
 }

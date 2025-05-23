@@ -100,7 +100,7 @@ html,
 /* Time Bar Fill */
 .time-bar-fill {
   height: 100%;
-  background-color: #4caf50;
+  background-color: #11243d;
   transition: width 1s linear;
 }
 
@@ -183,7 +183,7 @@ html,
   transform: scale(1);
 }
 .download-button {
-  background-color: #4caf50; /* Green background */
+  background-color: #11243d; /* Green background */
   color: white; /* White text */
   border: none; /* Remove border */
   padding: 10px 20px; /* Padding around the button */

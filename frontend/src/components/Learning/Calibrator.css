@@ -30,8 +30,7 @@
   text-align: center;
   margin-top: -50px;
   margin-left: -100px;
-   margin-right: -800px;
- 
+  margin-right: -800px;
 }
 
 .calibrator-title {
@@ -55,9 +54,9 @@
   flex-direction: column;
   align-items: center;
   padding: 15px;
-  border: 2px solid #0047ab; /* Blue border */
+  border: 3px solid #11243d; /* Blue border */
   border-radius: 10px;
-  background-color: #ffffff; /* White background */
+  background-color: #cdd2f099; /* White background */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
   width: 300px;
   text-align: center;
@@ -83,7 +82,7 @@
   padding: 8px 15px;
   font-size: 16px;
   color: #fff;
-  background-color: #0047ab;
+  background-color: #11243d;
   border: none;
   border-radius: 5px;
   cursor: pointer;

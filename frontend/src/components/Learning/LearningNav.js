@@ -93,8 +93,9 @@ export default function LearningNav() {
       <Tabs value={value} onChange={handleTabChange}>
         <Tab value="home" label="Home" />
         <Tab value="memory" label="Memory Activity" />
-        <Tab value="logic" label="Logical Thinking" />
         <Tab value="shadow" label="ShadowGame" />
+        <Tab value="logic" label="Logical Thinking" />
+        {/* <Tab value="shadow" label="ShadowGame" /> */}
         <Tab value="results" label="AllResults" />
         <Tab value="subhome" label="SubHome" />
         <Button
@@ -149,8 +150,9 @@ export default function LearningNav() {
       <Box sx={{ mt: 2 }}>
         {value === "home" && <Calibrator />}
         {value === "memory" && <MemoryCard />}
-        {value === "logic" && <Lo />}
         {value === "shadow" && <ShadowGame />}
+        {value === "logic" && <Lo />}
+        {/* {value === "shadow" && <ShadowGame />} */}
         {value === "results" && <AllResults />}
         {/* {value === "subhome" && <SubHome />} */}
         {value === "subhome" && <SubHome onSelectActivity={setValue} />}
