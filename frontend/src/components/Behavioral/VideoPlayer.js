@@ -13,6 +13,7 @@ import Button from "@mui/material/Button";
 import axios from "axios";
 import LineArtCanvas from "./LineArtCanvas";
 import ResultsModal from "./ResultsModal";
+import html2canvas from "html2canvas";
 
 const VideoPlayer = () => {
   const [modalResponses, setModalResponses] = useState([]);
@@ -31,6 +32,7 @@ const VideoPlayer = () => {
 
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const recordedChunksRef = useRef([]);
+  const canvasContainerRef = useRef(null);
   const [downloadUrl, setDownloadUrl] = useState("");
 
   const constantImage = "src/assets/images/behavioral/exampleHeatMap.png";
@@ -113,6 +115,21 @@ const VideoPlayer = () => {
     } catch (error) {
       console.error("Error accessing webcam:", error);
     }
+  };
+
+  const downloadLineArtImage = async () => {
+    if (!canvasContainerRef.current) return;
+
+    const canvas = canvasContainerRef.current.querySelector("canvas");
+    if (!canvas) return;
+
+    const image = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = image;
+    link.download = "lineart.png";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const stopRecording = () => {
@@ -242,13 +259,25 @@ const VideoPlayer = () => {
           >
             Log All Data
           </Button>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={downloadLineArtImage}
+            style={{ position: "fixed", right: "2rem", bottom: "14rem", zIndex: 99 }}
+          >
+            Download Lineart
+          </Button>
+
           <input
             type="file"
             accept="image/*"
             onChange={handleImageUpload}
             style={{ position: "fixed", right: "2rem", bottom: "18rem", zIndex: 99 }}
           />
-          <LineArtCanvas points={gazeCoordinates} />
+          <div ref={canvasContainerRef}>
+            <LineArtCanvas points={gazeCoordinates} />
+          </div>
+
           <FormModal
             setModalResponses={setModalResponses}
             modalOpen={modalOpen}
