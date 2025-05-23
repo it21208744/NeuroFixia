@@ -30,7 +30,7 @@ const VideoPlayer = () => {
   const [uploadedImage, setUploadedImage] = useState(null);
 
   const [mediaRecorder, setMediaRecorder] = useState(null);
-  const recordedChunksRef = useRef([]); // ✅ Using ref instead of state
+  const recordedChunksRef = useRef([]);
   const [downloadUrl, setDownloadUrl] = useState("");
 
   const constantImage = "src/assets/images/behavioral/exampleHeatMap.png";
@@ -86,11 +86,11 @@ const VideoPlayer = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
 
-      recordedChunksRef.current = []; // ✅ reset buffer
+      recordedChunksRef.current = [];
 
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          recordedChunksRef.current.push(event.data); // ✅ use ref
+          recordedChunksRef.current.push(event.data);
         }
       };
 
@@ -98,6 +98,14 @@ const VideoPlayer = () => {
         const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
         const url = URL.createObjectURL(blob);
         setDownloadUrl(url);
+
+        // Auto-download video as "video.webm"
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "video.webm";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       };
 
       recorder.start();
@@ -161,7 +169,7 @@ const VideoPlayer = () => {
 
       if (downloadUrl) {
         const videoBlob = await fetch(downloadUrl).then((res) => res.blob());
-        formData.append("video", videoBlob, "recorded-video.webm");
+        formData.append("video", videoBlob, "video.webm");
       }
 
       if (uploadedImage) {
@@ -234,17 +242,6 @@ const VideoPlayer = () => {
           >
             Log All Data
           </Button>
-          {downloadUrl && (
-            <Button
-              variant="contained"
-              color="success"
-              href={downloadUrl}
-              download="recorded-video.webm"
-              style={{ position: "fixed", right: "2rem", bottom: "14rem", zIndex: 99 }}
-            >
-              Download Recording
-            </Button>
-          )}
           <input
             type="file"
             accept="image/*"

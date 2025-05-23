@@ -143,7 +143,11 @@ def predict_combined_endpoint():
         image_folder = 'testFiles/heatMap'
 
         # Get the first file from each folder
-        video_path = next((os.path.join(video_folder, f) for f in os.listdir(video_folder) if f.endswith(('.mp4', '.avi'))), None)
+        # Use the specific video file named 'video.webm'
+        video_path = os.path.join(video_folder, 'video.webm')
+        if not os.path.isfile(video_path):
+            return jsonify({'error': 'video.webm not found in the video folder.'}), 400
+
         image_path = next((os.path.join(image_folder, f) for f in os.listdir(image_folder) if f.endswith(('.png', '.jpg', '.jpeg'))), None)
 
         print("Using Video Path:", video_path)
