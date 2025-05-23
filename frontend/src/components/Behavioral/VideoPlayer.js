@@ -28,8 +28,6 @@ const VideoPlayer = () => {
   const videoElementRef = useRef(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [resultModalOpen, setResultModalOpen] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState(null);
-
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const recordedChunksRef = useRef([]);
   const canvasContainerRef = useRef(null);
@@ -101,7 +99,6 @@ const VideoPlayer = () => {
         const url = URL.createObjectURL(blob);
         setDownloadUrl(url);
 
-        // Auto-download video
         const videoLink = document.createElement("a");
         videoLink.href = url;
         videoLink.download = "video.webm";
@@ -109,7 +106,6 @@ const VideoPlayer = () => {
         videoLink.click();
         document.body.removeChild(videoLink);
 
-        // Auto-download canvas
         if (canvasContainerRef.current) {
           const canvas = canvasContainerRef.current.querySelector("canvas");
           if (canvas) {
@@ -165,48 +161,53 @@ const VideoPlayer = () => {
       console.log("Final Modal Responses:", [...modalResponses, response]);
       console.log("Final Gaze Coordinates:", gazeCoordinates);
       stopRecording();
-      sendDataToAPI();
+      sendDataToAPI(); //instead of this open a modal saying the test is completed
     }
     collectGazeDataRef.current = false;
     handleModalClose();
   };
 
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setUploadedImage(file);
-    }
-  };
-
   const sendDataToAPI = async () => {
     try {
+      console.log("Opening result modal...");
       setResultModalOpen(true);
+
       const formData = new FormData();
 
       if (downloadUrl) {
+        console.log("Fetching video from:", downloadUrl);
         const videoBlob = await fetch(downloadUrl).then((res) => res.blob());
+        console.log("Video blob fetched:", videoBlob);
         formData.append("video", videoBlob, "video.webm");
+        console.log("Video appended to formData");
+      } else {
+        console.log("No downloadUrl provided.");
       }
 
-      if (uploadedImage) {
-        formData.append("image", uploadedImage, uploadedImage.name);
-      } else {
-        const imageResponse = await fetch(constantImage);
-        const imageBlob = await imageResponse.blob();
-        formData.append("image", imageBlob, "exampleHeatMap.png");
-      }
+      console.log("Fetching image from:", constantImage);
+      const imageResponse = await fetch(constantImage);
+      const imageBlob = await imageResponse.blob();
+      console.log("Image blob fetched:", imageBlob);
+      formData.append("image", imageBlob, "exampleHeatMap.png");
+      console.log("Image appended to formData");
 
       if (modalResponses.length > 0) {
+        console.log("Modal responses to append:", modalResponses);
         formData.append("expressions", JSON.stringify(modalResponses));
+        console.log("Expressions appended to formData");
+      } else {
+        console.log("No modal responses to append.");
       }
 
+      console.log("Sending formData to API...");
       const response = await axios.post("http://localhost:5000/api/analyze-combined", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
+
+      console.log("API response received:", response.data);
       setApiRes(response.data);
-      console.log("API Response:", response.data);
     } catch (error) {
       console.error("Error sending data to API:", error);
     }
@@ -258,12 +259,7 @@ const VideoPlayer = () => {
           >
             Log All Data
           </Button>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            style={{ position: "fixed", right: "2rem", bottom: "14rem", zIndex: 99 }}
-          />
+
           <div ref={canvasContainerRef}>
             <LineArtCanvas points={gazeCoordinates} />
           </div>
