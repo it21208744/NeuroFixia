@@ -9,6 +9,8 @@ const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
 const FormData = require('form-data')
+const sessionRoutes = require('./routes/sensory/sessionRoutes'); //sensory
+
 
 const app = express()
 connectDB()
@@ -218,6 +220,8 @@ app.post(
 
 app.use('/api/users', userRoutes)
 app.use('/api/models', modelRoutes)
+app.use('/api/sessions', sessionRoutes); //sensory
+
 
 const PORT = process.env.PORT || 5000
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
