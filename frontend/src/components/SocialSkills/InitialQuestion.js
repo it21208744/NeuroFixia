@@ -107,13 +107,13 @@ export default function InitialQuestion() {
   return (
     <>
       <div
-        style={{
-          backgroundImage: `url(${downloadImg})`,
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-          width: "100vw",
-          height: "100vh",
-        }}
+      // style={{
+      //   backgroundImage: `url(${downloadImg})`,
+      //   backgroundRepeat: "no-repeat",
+      //   backgroundSize: "cover",
+      //   width: "100vw",
+      //   height: "100vh",
+      // }}
       >
         <div
           style={{

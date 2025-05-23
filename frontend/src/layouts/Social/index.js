@@ -64,9 +64,7 @@ function Tables() {
         <MDBox pt={6} pb={3}>
           <Grid container spacing={6}>
             <Grid item xs={12}>
-              <MDTypography variant="h6" gutterBottom>
-                Sample Page Social
-              </MDTypography>
+              <MDTypography variant="h6" gutterBottom></MDTypography>
               <Tabs
                 value={value}
                 onChange={handleChange}

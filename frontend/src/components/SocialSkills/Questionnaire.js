@@ -283,13 +283,13 @@ export default function Questionnaire() {
   return (
     <>
       <div
-        style={{
-          backgroundImage: `url(${downloadImg})`,
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-          width: "100vw",
-          height: "300vh",
-        }}
+      // style={{
+      //   backgroundImage: `url(${downloadImg})`,
+      //   backgroundRepeat: "no-repeat",
+      //   backgroundSize: "cover",
+      //   width: "100vw",
+      //   height: "300vh",
+      // }}
       >
         <h3 style={{ textAlign: "center", fontWeight: "10px" }}>{translatedLabels.title}</h3>
         <form onSubmit={handleSubmit} style={containerStyle}>
