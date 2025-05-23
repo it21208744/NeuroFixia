@@ -96,18 +96,32 @@ const VideoPlayer = () => {
         }
       };
 
-      recorder.onstop = () => {
+      recorder.onstop = async () => {
         const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
         const url = URL.createObjectURL(blob);
         setDownloadUrl(url);
 
-        // Auto-download video as "video.webm"
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "video.webm";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        // Auto-download video
+        const videoLink = document.createElement("a");
+        videoLink.href = url;
+        videoLink.download = "video.webm";
+        document.body.appendChild(videoLink);
+        videoLink.click();
+        document.body.removeChild(videoLink);
+
+        // Auto-download canvas
+        if (canvasContainerRef.current) {
+          const canvas = canvasContainerRef.current.querySelector("canvas");
+          if (canvas) {
+            const image = canvas.toDataURL("image/png");
+            const imageLink = document.createElement("a");
+            imageLink.href = image;
+            imageLink.download = "lineart.png";
+            document.body.appendChild(imageLink);
+            imageLink.click();
+            document.body.removeChild(imageLink);
+          }
+        }
       };
 
       recorder.start();
@@ -115,21 +129,6 @@ const VideoPlayer = () => {
     } catch (error) {
       console.error("Error accessing webcam:", error);
     }
-  };
-
-  const downloadLineArtImage = async () => {
-    if (!canvasContainerRef.current) return;
-
-    const canvas = canvasContainerRef.current.querySelector("canvas");
-    if (!canvas) return;
-
-    const image = canvas.toDataURL("image/png");
-    const link = document.createElement("a");
-    link.href = image;
-    link.download = "lineart.png";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const stopRecording = () => {
@@ -259,20 +258,11 @@ const VideoPlayer = () => {
           >
             Log All Data
           </Button>
-          <Button
-            variant="contained"
-            color="success"
-            onClick={downloadLineArtImage}
-            style={{ position: "fixed", right: "2rem", bottom: "14rem", zIndex: 99 }}
-          >
-            Download Lineart
-          </Button>
-
           <input
             type="file"
             accept="image/*"
             onChange={handleImageUpload}
-            style={{ position: "fixed", right: "2rem", bottom: "18rem", zIndex: 99 }}
+            style={{ position: "fixed", right: "2rem", bottom: "14rem", zIndex: 99 }}
           />
           <div ref={canvasContainerRef}>
             <LineArtCanvas points={gazeCoordinates} />
