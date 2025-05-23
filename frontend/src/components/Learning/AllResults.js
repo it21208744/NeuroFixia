@@ -124,7 +124,7 @@ const AllResults = () => {
   };
 
   const handleSuggestionClick = () => {
-    navigate("/subhome"); // Navigate to SubHome page
+    setTabValue("subhome");
   };
 
   return (
