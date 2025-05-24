@@ -190,6 +190,16 @@ app.post(
   }
 )
 
+app.get('/api/predictions', async (req, res) => {
+  try {
+    const predictions = await Prediction.find().sort({ createdAt: -1 }) // latest first
+    res.json(predictions)
+  } catch (error) {
+    console.error('Error fetching predictions:', error)
+    res.status(500).json({ error: 'Failed to fetch predictions' })
+  }
+})
+
 app.use('/api/users', userRoutes)
 app.use('/api/models', modelRoutes)
 
