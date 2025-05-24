@@ -14,6 +14,11 @@ import axios from "axios";
 import LineArtCanvas from "./LineArtCanvas";
 import ResultsModal from "./ResultsModal";
 import html2canvas from "html2canvas";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
 
 const VideoPlayer = () => {
   const [modalResponses, setModalResponses] = useState([]);
@@ -32,6 +37,7 @@ const VideoPlayer = () => {
   const recordedChunksRef = useRef([]);
   const canvasContainerRef = useRef(null);
   const [downloadUrl, setDownloadUrl] = useState("");
+  const [testCompletedModalOpen, setTestCompletedModalOpen] = useState(false);
 
   const constantImage = "src/assets/images/behavioral/exampleHeatMap.png";
 
@@ -161,8 +167,10 @@ const VideoPlayer = () => {
       console.log("Final Modal Responses:", [...modalResponses, response]);
       console.log("Final Gaze Coordinates:", gazeCoordinates);
       stopRecording();
-      sendDataToAPI(); //instead of this open a modal saying the test is completed
+      setTestCompletedModalOpen(true); // 👈 open the modal
+      // sendDataToAPI();
     }
+
     collectGazeDataRef.current = false;
     handleModalClose();
   };
@@ -290,6 +298,19 @@ const VideoPlayer = () => {
             data={apiRes}
           />
         </Grid>
+        <Dialog open={testCompletedModalOpen} onClose={() => setTestCompletedModalOpen(false)}>
+          <DialogTitle>Test Completed</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              You’ve finished all the videos. Thank you for completing the test!
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setTestCompletedModalOpen(false)} color="primary">
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Grid>
     </div>
   );
