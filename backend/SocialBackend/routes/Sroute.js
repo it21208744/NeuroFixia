@@ -6,9 +6,10 @@ let social = require('../models/Smod')
 router.route('/analyze').post(async (req, res) => {
   try {
     const { q1, q2, q3, q4, q5, q6, q7, q8, q9, q10 } = req.body
+    console.log('Heheeee')
 
     const sentimentResponse = await axios.post(
-      'http://localhost:5011/sentiment',
+      'http://192.168.1.5:5001/sentiment',
       {
         q9: q9,
         q10: q10,
@@ -19,7 +20,7 @@ router.route('/analyze').post(async (req, res) => {
     const sentiment_q10 = sentimentResponse.data.sentiment_q10
 
     const riskResponse = await axios.post(
-      'http://localhost:5011/risk-prediction',
+      'http://192.168.1.5:5001/risk-prediction',
       {
         yes_no_answers: [q1, q2, q3, q4, q5, q6, q7, q8],
         sentiment_q9: sentiment_q9,
@@ -53,7 +54,6 @@ router.route('/analyze').post(async (req, res) => {
       top_3_features: top_3_features, // New field
       date: new Date(),
     })
-
     await newSocial.save()
 
     res.json({ risk_prediction: riskPrediction })
