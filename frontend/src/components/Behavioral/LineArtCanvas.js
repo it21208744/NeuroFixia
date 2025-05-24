@@ -1,40 +1,58 @@
 import React, { useRef, useEffect } from "react";
 import PropTypes from "prop-types";
 
-const LineArtCanvas = ({ points }) => {
+const LineArtCanvas = ({ points, width = 300, height = 300 }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
-    // Set canvas dimensions
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    // Set dimensions
+    canvas.width = width;
+    canvas.height = height;
 
-    // Clear the canvas
-    ctx.fillStyle = "black";
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Customize stroke styles
+    // Clear and prepare canvas
+    ctx.clearRect(0, 0, width, height);
     ctx.lineWidth = 0.5;
+    ctx.strokeStyle = "white";
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, width, height);
 
-    // Draw lines
+    // Get max screen dimensions to normalize
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
+
+    if (screenW === 0 || screenH === 0) return;
+
     points.forEach((point, index) => {
-      const { x, y, color } = point;
+      const normX = (point.x / screenW) * width;
+      const normY = (point.y / screenH) * height;
 
       ctx.beginPath();
       if (index > 0) {
-        const prevPoint = points[index - 1];
-        ctx.moveTo(prevPoint.x, prevPoint.y); // Start at the previous point
+        const prev = points[index - 1];
+        const prevX = (prev.x / screenW) * width;
+        const prevY = (prev.y / screenH) * height;
+        ctx.moveTo(prevX, prevY);
       }
-      ctx.lineTo(x, y); // Draw line to current point
-      ctx.strokeStyle = color || `hsl(${Math.random() * 360}, 100%, 50%)`; // Random colors
+      ctx.lineTo(normX, normY);
+      ctx.strokeStyle = point.color || `hsl(${Math.random() * 360}, 100%, 50%)`;
       ctx.stroke();
     });
-  }, [points]);
+  }, [points, width, height]);
 
-  return <canvas ref={canvasRef} style={{ display: "block" }} />;
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        border: "1px solid #ccc",
+        backgroundColor: "black",
+        maxWidth: "100%",
+        height: "auto",
+      }}
+    />
+  );
 };
 
 LineArtCanvas.propTypes = {
@@ -45,6 +63,8 @@ LineArtCanvas.propTypes = {
       color: PropTypes.string,
     })
   ).isRequired,
+  width: PropTypes.number,
+  height: PropTypes.number,
 };
 
 export default LineArtCanvas;

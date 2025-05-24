@@ -260,8 +260,16 @@ const VideoPlayer = () => {
             Log All Data
           </Button>
 
-          <div ref={canvasContainerRef}>
-            <LineArtCanvas points={gazeCoordinates} />
+          <div
+            ref={canvasContainerRef}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: "2rem",
+            }}
+          >
+            <LineArtCanvas points={gazeCoordinates} width={1080} height={720} />
           </div>
 
           <FormModal
