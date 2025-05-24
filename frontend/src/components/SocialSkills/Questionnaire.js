@@ -297,6 +297,7 @@ export default function Questionnaire() {
             <div key={i} style={{ width: "100%" }}>
               <label style={labelStyle}>{translatedLabels[`q${i + 1}`]}</label>
               <select
+                required
                 value={eval(`q${i + 1}`)}
                 onChange={(e) => eval(`setQ${i + 1}(e.target.value)`)}
                 style={inputStyle}
@@ -314,6 +315,7 @@ export default function Questionnaire() {
             <div key={i + 8} style={lastFieldStyle}>
               <label style={labelStyle}>{translatedLabels[`q${i + 9}`]}</label>
               <textarea
+                required
                 value={eval(`q${i + 9}`)}
                 onChange={(e) => eval(`setQ${i + 9}(e.target.value)`)}
                 style={inputStyle}

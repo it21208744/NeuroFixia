@@ -178,7 +178,8 @@ const InstructionsModal = ({ onClose }) => {
           backgroundColor: "#fff",
           padding: "20px",
           borderRadius: "10px",
-          textAlign: "center",
+          textAlign: "left",
+          marginLeft: "300px",
         }}
       >
         <h2>Instructions</h2>
@@ -367,7 +368,7 @@ export default function SimonSaysGame() {
     fontSize: "16px",
     width: "20%",
     marginTop: "18px",
-    marginLeft: "600px",
+    marginLeft: "500px",
     marginRight: "100px",
     display: "block",
     textAlign: "center",
@@ -383,7 +384,7 @@ export default function SimonSaysGame() {
     fontSize: "16px",
     width: "20%",
     marginTop: "5px",
-    marginLeft: "600px",
+    marginLeft: "500px",
     marginRight: "100px",
     display: "block",
     textAlign: "center",
@@ -399,7 +400,7 @@ export default function SimonSaysGame() {
     fontSize: "16px",
     width: "20%",
     marginTop: "15px",
-    marginLeft: "600px",
+    marginLeft: "500px",
     marginRight: "100px",
     display: "block",
     textAlign: "center",
@@ -408,13 +409,13 @@ export default function SimonSaysGame() {
   return (
     <>
       <div
-        style={{
-          backgroundImage: `url(${downloadImg})`,
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-          width: "100vw",
-          height: "300vh",
-        }}
+      // style={{
+      //   backgroundImage: `url(${downloadImg})`,
+      //   backgroundRepeat: "no-repeat",
+      //   backgroundSize: "cover",
+      //   width: "100vw",
+      //   height: "300vh",
+      // }}
       >
         <center>
           <h1 className="text-xl font-bold mb-4">Simon Says Game</h1>

@@ -121,7 +121,7 @@ export default function InitialQuestion() {
             fontWeight: "1000",
             fontSize: "70px",
             fontStyle: "oblique",
-            marginLeft: "350px",
+            marginLeft: "210px",
           }}
         >
           Social Skills Observation
