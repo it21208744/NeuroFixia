@@ -105,7 +105,7 @@ const AllResults = () => {
 
       console.log("Sending request data:", requestData);
 
-      const response = await axios.post("http://127.0.0.1:5000/predict", requestData);
+      const response = await axios.post("http://127.0.0.1:5021/predict", requestData);
 
       const { prediction, probability_autism, probability_td, confidence_score } = response.data;
 

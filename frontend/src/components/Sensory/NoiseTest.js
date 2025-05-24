@@ -128,7 +128,7 @@ const NoiseTest = () => {
       const formData = new FormData();
       formData.append("file", videoFile);
 
-      const response = await axios.post("http://localhost:5001/predict", formData, {
+      const response = await axios.post("http://localhost:5031/predict", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
