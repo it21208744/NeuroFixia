@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import {
   LineChart,
   Line,
@@ -10,38 +11,37 @@ import {
   CartesianGrid,
 } from "recharts";
 
-const dummyData = [
-  {
-    testDate: "2025-05-01",
-    combined_confidence: 0.799,
-    behavior_confidence: 0.998,
-    facial_confidence: 0.813,
-    heatmap_confidence: 1.3e-9,
-    final_prediction: "autism",
-  },
-  {
-    testDate: "2025-05-10",
-    combined_confidence: 0.651,
-    behavior_confidence: 0.912,
-    facial_confidence: 0.702,
-    heatmap_confidence: 3.5e-8,
-    final_prediction: "non-autism",
-  },
-  {
-    testDate: "2025-05-20",
-    combined_confidence: 0.887,
-    behavior_confidence: 0.991,
-    facial_confidence: 0.845,
-    heatmap_confidence: 2.9e-9,
-    final_prediction: "autism",
-  },
-];
-
 const TestResultsChart = () => {
+  const [chartData, setChartData] = useState([]);
+
+  useEffect(() => {
+    const fetchPredictions = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/predictions");
+
+        // Transform API response to match chart format
+        const formattedData = response.data.map((item) => ({
+          testDate: new Date(item.createdAt).toISOString().split("T")[0],
+          combined_confidence: item.combined_confidence,
+          behavior_confidence: item.details.behavior.confidence,
+          facial_confidence: item.details.facial_expressions_recognition.confidence,
+          heatmap_confidence: item.details.heatmap.confidence,
+          final_prediction: item.final_prediction,
+        }));
+
+        setChartData(formattedData);
+      } catch (error) {
+        console.error("Error fetching prediction data:", error);
+      }
+    };
+
+    fetchPredictions();
+  }, []);
+
   return (
     <div style={{ width: "100%", height: 400 }}>
       <ResponsiveContainer>
-        <LineChart data={dummyData}>
+        <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="testDate" />
           <YAxis domain={[0, 1]} />
