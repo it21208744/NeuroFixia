@@ -8,7 +8,7 @@ router.route('/analyze').post(async (req, res) => {
     const { q1, q2, q3, q4, q5, q6, q7, q8, q9, q10 } = req.body
 
     const sentimentResponse = await axios.post(
-      'http://localhost:5001/sentiment',
+      'http://localhost:5011/sentiment',
       {
         q9: q9,
         q10: q10,
@@ -19,7 +19,7 @@ router.route('/analyze').post(async (req, res) => {
     const sentiment_q10 = sentimentResponse.data.sentiment_q10
 
     const riskResponse = await axios.post(
-      'http://localhost:5001/risk-prediction',
+      'http://localhost:5011/risk-prediction',
       {
         yes_no_answers: [q1, q2, q3, q4, q5, q6, q7, q8],
         sentiment_q9: sentiment_q9,
