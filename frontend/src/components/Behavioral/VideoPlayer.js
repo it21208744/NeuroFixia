@@ -1,4 +1,3 @@
-// Add this at the top with other imports
 import { useEffect, useRef, useState } from "react";
 import Grid from "@mui/material/Grid";
 import MDBox from "components/MDBox";
@@ -20,6 +19,9 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogActions from "@mui/material/DialogActions";
 import TestResultsChart from "./TestResultsChart";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import Box from "@mui/material/Box";
 
 const VideoPlayer = () => {
   const [modalResponses, setModalResponses] = useState([]);
@@ -39,6 +41,7 @@ const VideoPlayer = () => {
   const canvasContainerRef = useRef(null);
   const [downloadUrl, setDownloadUrl] = useState("");
   const [testCompletedModalOpen, setTestCompletedModalOpen] = useState(false);
+  const [tabIndex, setTabIndex] = useState(0); // <-- Tab state
 
   const constantImage = "src/assets/images/behavioral/exampleHeatMap.png";
 
@@ -168,8 +171,7 @@ const VideoPlayer = () => {
       console.log("Final Modal Responses:", [...modalResponses, response]);
       console.log("Final Gaze Coordinates:", gazeCoordinates);
       stopRecording();
-      setTestCompletedModalOpen(true); // 👈 open the modal
-      // sendDataToAPI();
+      setTestCompletedModalOpen(true);
     }
 
     collectGazeDataRef.current = false;
@@ -178,44 +180,29 @@ const VideoPlayer = () => {
 
   const sendDataToAPI = async () => {
     try {
-      console.log("Opening result modal...");
       setResultModalOpen(true);
 
       const formData = new FormData();
 
       if (downloadUrl) {
-        console.log("Fetching video from:", downloadUrl);
         const videoBlob = await fetch(downloadUrl).then((res) => res.blob());
-        console.log("Video blob fetched:", videoBlob);
         formData.append("video", videoBlob, "video.webm");
-        console.log("Video appended to formData");
-      } else {
-        console.log("No downloadUrl provided.");
       }
 
-      console.log("Fetching image from:", constantImage);
       const imageResponse = await fetch(constantImage);
       const imageBlob = await imageResponse.blob();
-      console.log("Image blob fetched:", imageBlob);
       formData.append("image", imageBlob, "exampleHeatMap.png");
-      console.log("Image appended to formData");
 
       if (modalResponses.length > 0) {
-        console.log("Modal responses to append:", modalResponses);
         formData.append("expressions", JSON.stringify(modalResponses));
-        console.log("Expressions appended to formData");
-      } else {
-        console.log("No modal responses to append.");
       }
 
-      console.log("Sending formData to API...");
       const response = await axios.post("http://localhost:5000/api/analyze-combined", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      console.log("API response received:", response.data);
       setApiRes(response.data);
     } catch (error) {
       console.error("Error sending data to API:", error);
@@ -229,102 +216,112 @@ const VideoPlayer = () => {
   };
 
   return (
-    <div>
-      <Grid container spacing={6}>
-        <Grid item xs={12}>
-          <div ref={playerRef}></div>
-          <MDBox
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            width="3.25rem"
-            height="3.25rem"
-            bgColor="white"
-            shadow="sm"
-            borderRadius="50%"
-            position="fixed"
-            right="2rem"
-            bottom="2rem"
-            zIndex={99}
-            color="dark"
-            sx={{ cursor: "pointer" }}
-            onClick={handlePlayVideo}
-          >
-            Start test
-          </MDBox>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => handleNextVideo("")}
-            style={{ position: "fixed", right: "2rem", bottom: "6rem", zIndex: 99 }}
-          >
-            Next Video
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={logAllData}
-            style={{ position: "fixed", right: "2rem", bottom: "10rem", zIndex: 99 }}
-          >
-            Log All Data
-          </Button>
+    <Box>
+      <Tabs value={tabIndex} onChange={(e, newValue) => setTabIndex(newValue)} centered>
+        <Tab label="Test" />
+        <Tab label="Summary" />
+        <Tab label="Activities" />
+      </Tabs>
 
-          <div
-            ref={canvasContainerRef}
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              marginTop: "2rem",
-            }}
-          >
-            <LineArtCanvas points={gazeCoordinates} width={1080} height={720} />
-          </div>
-          <div
-            ref={canvasContainerRef}
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              marginTop: "2rem",
-            }}
-          >
-            <TestResultsChart />
-          </div>
-
-          <FormModal
-            setModalResponses={setModalResponses}
-            modalOpen={modalOpen}
-            setModalOpen={setModalOpen}
-            handleModalOpen={handleModalOpen}
-            handleModalClose={handleModalClose}
-            handleNextVideo={handleNextVideo}
-          />
-          <ResultsModal
-            setModalResponses={setModalResponses}
-            modalOpen={resultModalOpen}
-            setModalOpen={setResultModalOpen}
-            handleModalOpen={handleResultModalOpen}
-            handleModalClose={handleResultModalClose}
-            handleNextVideo={handleNextVideo}
-            data={apiRes}
-          />
-        </Grid>
-        <Dialog open={testCompletedModalOpen} onClose={() => setTestCompletedModalOpen(false)}>
-          <DialogTitle>Test Completed</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              You’ve finished all the videos. Thank you for completing the test!
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setTestCompletedModalOpen(false)} color="primary">
-              Close
+      {tabIndex === 0 && (
+        <Grid container spacing={6}>
+          <Grid item xs={12}>
+            <div ref={playerRef}></div>
+            <MDBox
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              width="3.25rem"
+              height="3.25rem"
+              bgColor="white"
+              shadow="sm"
+              borderRadius="50%"
+              position="fixed"
+              right="2rem"
+              bottom="2rem"
+              zIndex={99}
+              color="dark"
+              sx={{ cursor: "pointer" }}
+              onClick={handlePlayVideo}
+            >
+              Start test
+            </MDBox>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => handleNextVideo("")}
+              style={{ position: "fixed", right: "2rem", bottom: "6rem", zIndex: 99 }}
+            >
+              Next Video
             </Button>
-          </DialogActions>
-        </Dialog>
-      </Grid>
-    </div>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={logAllData}
+              style={{ position: "fixed", right: "2rem", bottom: "10rem", zIndex: 99 }}
+            >
+              Log All Data
+            </Button>
+
+            <div
+              ref={canvasContainerRef}
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                marginTop: "2rem",
+              }}
+            >
+              <LineArtCanvas points={gazeCoordinates} width={1080} height={720} />
+            </div>
+
+            <FormModal
+              setModalResponses={setModalResponses}
+              modalOpen={modalOpen}
+              setModalOpen={setModalOpen}
+              handleModalOpen={handleModalOpen}
+              handleModalClose={handleModalClose}
+              handleNextVideo={handleNextVideo}
+            />
+            <ResultsModal
+              setModalResponses={setModalResponses}
+              modalOpen={resultModalOpen}
+              setModalOpen={setResultModalOpen}
+              handleModalOpen={handleResultModalOpen}
+              handleModalClose={handleResultModalClose}
+              handleNextVideo={handleNextVideo}
+              data={apiRes}
+            />
+          </Grid>
+        </Grid>
+      )}
+
+      {tabIndex === 1 && (
+        <Box mt={4}>
+          <TestResultsChart />
+        </Box>
+      )}
+
+      {tabIndex === 2 && (
+        <Box mt={4}>
+          <div>activities</div>
+        </Box>
+      )}
+
+      <Dialog open={testCompletedModalOpen} onClose={() => setTestCompletedModalOpen(false)}>
+        <DialogTitle>Test Completed</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            You’ve finished all the videos. Thank you for completing the test!
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setTestCompletedModalOpen(false)} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 
