@@ -3,6 +3,7 @@ const express = require('express')
 const connectDB = require('./config/db')
 const userRoutes = require('./routes/userRoutes')
 const modelRoutes = require('./routes/modelRoutes')
+const Prediction = require('./models/Prediction')
 const axios = require('axios')
 const cors = require('cors')
 const multer = require('multer')
@@ -160,14 +161,12 @@ app.post(
 
       console.log('Expressions:', expressions)
 
-      // Create a FormData object and append expressions only
       const formData = new FormData()
 
       if (expressions) {
         formData.append('expressions', JSON.stringify(expressions))
       }
 
-      // Send only expressions to the Python API
       const pythonApiResponse = await axios.post(
         'http://127.0.0.1:5002/predict-combined',
         formData,
@@ -178,7 +177,12 @@ app.post(
         }
       )
 
+      // Save the response to MongoDB
+      const savedPrediction = new Prediction(pythonApiResponse.data)
+      await savedPrediction.save()
+
       res.json(pythonApiResponse.data)
+      console.log(pythonApiResponse.data)
     } catch (error) {
       console.error('Error:', error)
       res.status(500).json({ error: 'Failed to analyze expressions' })
