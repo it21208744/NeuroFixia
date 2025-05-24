@@ -19,6 +19,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogActions from "@mui/material/DialogActions";
+import TestResultsChart from "./TestResultsChart";
 
 const VideoPlayer = () => {
   const [modalResponses, setModalResponses] = useState([]);
@@ -278,6 +279,17 @@ const VideoPlayer = () => {
             }}
           >
             <LineArtCanvas points={gazeCoordinates} width={1080} height={720} />
+          </div>
+          <div
+            ref={canvasContainerRef}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: "2rem",
+            }}
+          >
+            <TestResultsChart />
           </div>
 
           <FormModal
