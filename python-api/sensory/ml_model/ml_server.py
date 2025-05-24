@@ -145,7 +145,7 @@ def predict():
     if model_predicted_label == "Hypersensitivity" and emotion_alignment:
         final_label = "Hypersensitivity"
     else:
-        final_label = "Not Hypersensitivity"
+        final_label = "Not Hypersensitivity" 
 
     
     
