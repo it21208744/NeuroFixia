@@ -307,7 +307,7 @@ const NoiseTest = () => {
                     backgroundColor: "info.dark",
                   },
                 }}
-                disabled={noisePlaying && !recording}
+                // disabled={noisePlaying && !recording}
               >
                 {recording ? "Stop Recording" : "Start Recording"}
               </Button>
