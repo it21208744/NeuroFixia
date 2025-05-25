@@ -103,7 +103,15 @@ const Logic2 = () => {
       </p>
 
       {/* Draggable cards */}
-      <div style={{ display: "flex", gap: "20px", marginBottom: "30px", flexWrap: "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "20px",
+          marginBottom: "30px",
+          flexWrap: "wrap",
+          marginLeft: "300px",
+        }}
+      >
         {cards.map((card, idx) => (
           <img
             key={idx}
@@ -125,7 +133,7 @@ const Logic2 = () => {
       </div>
 
       {/* Drop zones */}
-      <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
+      <div style={{ display: "flex", gap: "20px", marginBottom: "20px", marginLeft: "250px" }}>
         {dropped.map((card, idx) => (
           <div
             key={idx}
@@ -161,6 +169,7 @@ const Logic2 = () => {
       {dropped.every((img) => img !== null) && (
         <div
           style={{
+            marginLeft: "350px",
             marginTop: "10px",
             fontSize: "18px",
             fontWeight: "bold",
@@ -181,10 +190,11 @@ const Logic2 = () => {
           padding: "10px 20px",
           fontSize: "16px",
           borderRadius: "5px",
-          backgroundColor: "#4CAF50",
+          backgroundColor: "#11243d",
           color: "#fff",
           border: "none",
           cursor: "pointer",
+          marginLeft: "450px",
         }}
       >
         Shuffle New Pattern

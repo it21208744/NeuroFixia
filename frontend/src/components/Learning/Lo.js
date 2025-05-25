@@ -2,6 +2,8 @@ import React, { useState, useContext, useEffect } from "react";
 import "./Lo.css";
 import * as XLSX from "xlsx"; // Import SheetJS library
 import { DataContext } from "layouts/Learning";
+import correctSound from "../../components/Cognitive/correctselect.mp3";
+import wrongSound from "../../components/Cognitive/wrongselect.mp3";
 
 const patterns = [
   {
@@ -205,6 +207,9 @@ const Lo = () => {
   const [feedbackIcons, setFeedbackIcons] = useState({});
   const [selectedOptions, setSelectedOptions] = useState({});
 
+  const correctAudio = new Audio(correctSound);
+  const wrongAudio = new Audio(wrongSound);
+
   const handleDrop = (selected, patternId) => {
     const pattern = patterns.find((p) => p.id === patternId);
     const isCorrect = selected === pattern.answer;
@@ -217,9 +222,11 @@ const Lo = () => {
     }
 
     if (isCorrect) {
+      correctAudio.play();
       setScore(score + pattern.points);
       setFeedbackIcons((prev) => ({ ...prev, [patternId]: "correct.png" }));
     } else {
+      wrongAudio.play();
       setErrors(errors + 1);
       setFeedbackIcons((prev) => ({ ...prev, [patternId]: "wrong.png" }));
     }

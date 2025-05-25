@@ -84,6 +84,7 @@ function MemoryCard() {
     return () => clearInterval(timer);
   }, []);
 
+  // Automatically hide all cards after 20 seconds
   useEffect(() => {
     const hideCardsTimer = setTimeout(() => {
       setReveal(false);
@@ -134,6 +135,7 @@ function MemoryCard() {
       }, 2000);
     }
 
+    // Accuracy=( Correct Matches / Total Attempts )×100 --------Memory recallAccuracy
     const totalCorrect = correctMatches + 1;
     const attempts = totalAttempts + 1;
     const totalResponseTime = [...responseTimes, responseTime].reduce((a, b) => a + b, 0);
@@ -141,9 +143,10 @@ function MemoryCard() {
     setAccuracy((totalCorrect / attempts) * 100);
     setAverageResponseTime(totalResponseTime / attempts);
 
-    const accuracyWeight = 1.5;
-    const timeWeight = 1.0;
+    const accuracyWeight = 1.5; // Example weight
+    const timeWeight = 1.0; // Example weight
 
+    // Memory Score = (Accuracy) − (Average Response Time)--------Memory Score
     setMemoryScore(
       accuracyWeight * ((totalCorrect / attempts) * 100) -
         timeWeight * (totalResponseTime / attempts)

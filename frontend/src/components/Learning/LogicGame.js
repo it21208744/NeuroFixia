@@ -101,6 +101,7 @@ function LogicGame() {
   return (
     <div className="LO1-logic-game">
       <div className="LO1-logic-card">
+        <h2 className="LO1-logic-title">Put the Numbers in Order!</h2>
         <div className="LO1-logic-grid">
           {grid.map((row, i) =>
             row.map((cell, j) => (

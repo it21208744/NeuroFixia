@@ -4,6 +4,9 @@ import "./ShadowGame.css";
 import { useNavigate } from "react-router-dom";
 import { DataContext } from "layouts/Learning";
 import { timeToFirstGaze, countTimesOutsideArea } from "./webgazerFunctions";
+
+import correctSound from "../../components/Cognitive/correctselect.mp3";
+import wrongSound from "../../components/Cognitive/wrongselect.mp3";
 // Updated patterns with correct file paths
 const patterns = [
   {
@@ -216,6 +219,10 @@ const ShadowGame = () => {
     setIsDisabled(true);
     const isCorrect = index === patterns[currentPattern].correctIndex;
     setFeed(isCorrect ? "You are correct!" : "You are wrong!");
+
+    const audio = new Audio(isCorrect ? correctSound : wrongSound);
+    audio.play();
+
     if (!isCorrect) setShadowScore((prevScore) => prevScore - 10);
 
     setTimeout(() => {

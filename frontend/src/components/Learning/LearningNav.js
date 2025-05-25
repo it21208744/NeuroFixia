@@ -93,11 +93,11 @@ export default function LearningNav() {
       <Tabs value={value} onChange={handleTabChange}>
         <Tab value="home" label="Home" />
         <Tab value="memory" label="Memory Activity" />
-        <Tab value="shadow" label="ShadowGame" />
+        <Tab value="shadow" label="Attention Training" />
         <Tab value="logic" label="Logical Thinking" />
         {/* <Tab value="shadow" label="ShadowGame" /> */}
         <Tab value="results" label="AllResults" />
-        <Tab value="subhome" label="SubHome" />
+        <Tab value="subhome" label="Suggestion Activity" />
         <Button
           sx={{
             ml: 2,
