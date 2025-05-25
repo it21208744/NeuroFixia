@@ -31,7 +31,7 @@ const style = {
 
 export default function ResultsModal({ modalOpen, handleModalOpen, handleModalClose, data }) {
   useEffect(() => {
-    // console.log(data);
+    console.log(data);
   }, [data]);
 
   const [selectedValue, setSelectedValue] = useState("");
@@ -78,15 +78,14 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
               >
                 <h3>Behavioral Risk</h3>
                 <p>
-                  Prediction: <strong>{data.details.behavior.prediction || "N/A"}</strong>
+                  Model Confidence:{" "}
+                  {data.details.behavior.confidence !== null
+                    ? `${(data.details.behavior.confidence * 100).toFixed(2)}%`
+                    : "Poor video quality"}
                 </p>
                 <p>
-                  Confidence:{" "}
-                  <strong>
-                    {data.details.behavior.confidence !== null
-                      ? `${(data.details.behavior.confidence * 100).toFixed(2)}%`
-                      : "N/A"}
-                  </strong>
+                  Prediction:{" "}
+                  <strong>{data.details.behavior.prediction || "Poor video quality"}</strong>
                 </p>
               </div>
 
@@ -101,14 +100,16 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
               >
                 <h3>Facial Expressions Recognition</h3>
                 <p>
-                  Prediction:{" "}
-                  <strong>{data.details.facial_expressions_recognition.prediction}</strong>
+                  Model Confidence:{" "}
+                  {data.details.facial_expressions_recognition.confidence !== null
+                    ? `${(data.details.facial_expressions_recognition.confidence * 100).toFixed(
+                        2
+                      )}%`
+                    : "N/A"}
                 </p>
                 <p>
-                  Confidence:{" "}
-                  <strong>
-                    {(data.details.facial_expressions_recognition.confidence * 100).toFixed(2)}%
-                  </strong>
+                  Prediction:{" "}
+                  <strong>{data.details.facial_expressions_recognition.prediction || "N/A"}</strong>
                 </p>
               </div>
 
@@ -123,10 +124,13 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
               >
                 <h3>Heatmap Analysis</h3>
                 <p>
-                  Prediction: <strong>{data.details.heatmap.prediction}</strong>
+                  Model Confidence:{" "}
+                  {data.details.heatmap.confidence !== null
+                    ? `${(data.details.heatmap.confidence * 100).toFixed(8)}%`
+                    : "N/A"}
                 </p>
                 <p>
-                  Confidence: <strong>{(data.details.heatmap.confidence * 100).toFixed(2)}%</strong>
+                  Prediction: <strong>{data.details.heatmap.prediction || "N/A"}</strong>
                 </p>
               </div>
 
@@ -142,10 +146,14 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
               >
                 <h3>
                   Final Prediction:{" "}
-                  <span style={{ color: "#007b00" }}>{data.final_prediction}</span>
+                  <span style={{ color: "#007b00" }}>{data.final_prediction || "N/A"}</span>
                 </h3>
                 <p>
-                  Confidence: <strong>{(data.combined_confidence * 100).toFixed(2)}%</strong>
+                  There is{" "}
+                  {data.combined_confidence !== null
+                    ? `${(data.combined_confidence * 100).toFixed(2)}%`
+                    : "N/A"}{" "}
+                  likelihood of exhibiting autistic traits.
                 </p>
               </div>
             </div>

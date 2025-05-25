@@ -3,6 +3,7 @@ const express = require('express')
 const connectDB = require('./config/db')
 const userRoutes = require('./routes/userRoutes')
 const modelRoutes = require('./routes/modelRoutes')
+const Prediction = require('./models/Prediction')
 const axios = require('axios')
 const cors = require('cors')
 const multer = require('multer')
@@ -154,69 +155,52 @@ app.post(
   upload.fields([{ name: 'video' }, { name: 'image' }]),
   async (req, res) => {
     try {
-      const videoPath = req.files['video']
-        ? path.resolve(req.files['video'][0].path).replace(/\\/g, '/')
-        : null
-      const imagePath = req.files['image']
-        ? path.resolve(req.files['image'][0].path).replace(/\\/g, '/')
-        : null
-
       const expressions = req.body.expressions
         ? JSON.parse(req.body.expressions).map((expr) =>
             expr.replace(/"/g, "'")
           )
         : null
 
-      console.log('Video Path:', videoPath)
-      console.log('Image Path:', imagePath)
       console.log('Expressions:', expressions)
 
-      // Create a FormData object
       const formData = new FormData()
 
-      // Append video file if it exists
-      if (videoPath) {
-        formData.append('video', fs.createReadStream(videoPath), {
-          filename: path.basename(videoPath),
-        })
-      }
-
-      // Append image file if it exists
-      if (imagePath) {
-        formData.append('image', fs.createReadStream(imagePath), {
-          filename: path.basename(imagePath),
-        })
-      }
-
-      // Append expressions if they exist
       if (expressions) {
         formData.append('expressions', JSON.stringify(expressions))
       }
 
-      // Send the FormData object to the Flask API
       const pythonApiResponse = await axios.post(
         'http://127.0.0.1:5002/predict-combined',
         formData,
         {
           headers: {
-            ...formData.getHeaders(), // Include the correct headers for multipart/form-data
+            ...formData.getHeaders(),
           },
         }
       )
 
-      // Cleanup uploaded files
-      if (videoPath) fs.unlinkSync(videoPath)
-      if (imagePath) fs.unlinkSync(imagePath)
-      cleanupUploads() // Cleanup the uploads directory
+      // Save the response to MongoDB
+      const savedPrediction = new Prediction(pythonApiResponse.data)
+      await savedPrediction.save()
 
-      // Send the response from the Python API back to the client
       res.json(pythonApiResponse.data)
+      console.log(pythonApiResponse.data)
     } catch (error) {
       console.error('Error:', error)
-      res.status(500).json({ error: 'Failed to analyze combined data' })
+      res.status(500).json({ error: 'Failed to analyze expressions' })
     }
   }
 )
+
+app.get('/api/predictions', async (req, res) => {
+  try {
+    const predictions = await Prediction.find().sort({ createdAt: -1 }) // latest first
+    res.json(predictions)
+  } catch (error) {
+    console.error('Error fetching predictions:', error)
+    res.status(500).json({ error: 'Failed to fetch predictions' })
+  }
+})
 
 app.use('/api/users', userRoutes)
 app.use('/api/models', modelRoutes)
