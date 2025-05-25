@@ -121,26 +121,32 @@ def predict():
     confidence_hyper = float(prediction[0][0])
     confidence_not_hyper = 1 - confidence_hyper
 
-    # FER emotion detection
+    # FER emotion detection with confidence thresholding
     dominant_emotion = "Unknown"
     emotion_alignment = False
     if mid_frame is not None:
         emotions = emotion_detector.detect_emotions(mid_frame)
         if emotions:
             top_emotions = emotions[0]['emotions']
-            dominant_emotion = max(top_emotions, key=top_emotions.get)
-            if dominant_emotion in ["fear", "angry", "sad"]:
-                emotion_alignment = True
-            elif dominant_emotion == "neutral" and model_predicted_label == "Hypersensitivity":
-                emotion_alignment = True
+            dominant_emotion, confidence = max(top_emotions.items(), key=lambda x: x[1])
+
+            if confidence > 0.5:
+                if dominant_emotion in ["fear", "angry", "sad"]:
+                    emotion_alignment = True
+                elif dominant_emotion == "neutral" and model_predicted_label == "Hypersensitivity":
+                    emotion_alignment = True
+                else:
+                    emotion_alignment = False
             else:
+                dominant_emotion = "Low confidence"
                 emotion_alignment = False
 
     # Final decision: BOTH model and emotion must suggest hypersensitivity
     if model_predicted_label == "Hypersensitivity" and emotion_alignment:
         final_label = "Hypersensitivity"
     else:
-        final_label = "Not Hypersensitivity"
+        final_label = "Not Hypersensitivity" 
+
     
     
 

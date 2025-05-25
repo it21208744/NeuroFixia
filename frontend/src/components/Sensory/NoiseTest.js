@@ -107,11 +107,24 @@ const NoiseTest = () => {
   // Handle video file selection
   const handleFileChange = (event) => {
     const file = event.target.files[0];
-    if (file) {
-      setVideoFile(file);
-      setVideoBlob(URL.createObjectURL(file));
-      setPrediction(null);
+
+    if (!file) return;
+
+    // Validate file type (optional)
+    if (!file.type.startsWith("video/")) {
+      alert("Please select a valid video file.");
+      return;
     }
+
+    // Revoke the old object URL if any
+    if (videoBlob) {
+      URL.revokeObjectURL(videoBlob);
+    }
+
+    const newBlob = URL.createObjectURL(file);
+    setVideoFile(file);
+    setVideoBlob(newBlob);
+    setPrediction(null);
   };
 
   // Upload video to backend for prediction
@@ -294,7 +307,7 @@ const NoiseTest = () => {
                     backgroundColor: "info.dark",
                   },
                 }}
-                disabled={noisePlaying && !recording}
+                // disabled={noisePlaying && !recording}
               >
                 {recording ? "Stop Recording" : "Start Recording"}
               </Button>
