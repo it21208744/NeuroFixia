@@ -6,11 +6,8 @@ import cv2
 from tensorflow.keras.models import load_model
 import mediapipe as mp
 from tensorflow.keras.preprocessing import image
-import pandas as pd
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import joblib
-import json  # Add this import
-
+import json
 
 app = Flask(__name__)
 
@@ -33,26 +30,22 @@ def extract_and_save_frames_with_keypoints(video_path, output_folder, frame_rate
     cap = cv2.VideoCapture(video_path)
     frame_count = 0
     valid_frame_count = 0
-    
+
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
-        
-        # Save every `frame_rate` frame for processing
+
         if frame_count % frame_rate == 0:
-            # Convert frame to RGB for Mediapipe
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = pose.process(frame_rgb)
-            
-            # Save the frame only if pose landmarks are detected
             if results.pose_landmarks:
                 frame_name = f"{os.path.splitext(os.path.basename(video_path))[0]}_valid_frame_{valid_frame_count}.jpg"
                 cv2.imwrite(os.path.join(output_folder, frame_name), frame)
                 valid_frame_count += 1
 
         frame_count += 1
-    
+
     cap.release()
 
 # Function to extract keypoints from an image
@@ -66,19 +59,16 @@ def extract_keypoints(image_path):
             keypoints.append((landmark.x, landmark.y, landmark.z))
     return keypoints
 
-# Function to predict behavior of a video using valid frames
-def predict_behavior(video_path, model):
+# ✅ Updated function to predict behavior of a video using valid frames
+def predict_behavior(video_path, model, label_map=None):
     output_folder = "valid_frames"
 
-    # Clear the output folder if it exists
     if os.path.exists(output_folder):
-        shutil.rmtree(output_folder)  # Delete the folder and its contents
-    os.makedirs(output_folder)  # Recreate the empty folder
+        shutil.rmtree(output_folder)
+    os.makedirs(output_folder)
 
-    # Extract and save valid frames with keypoints
     extract_and_save_frames_with_keypoints(video_path, output_folder, frame_rate=5)
 
-    # Process each valid frame to extract keypoints
     keypoints = []
     for frame in sorted(os.listdir(output_folder)):
         frame_path = os.path.join(output_folder, frame)
@@ -86,117 +76,105 @@ def predict_behavior(video_path, model):
         if kp:
             keypoints.append(np.array(kp).flatten())
 
-    # Check if we have any valid frames with keypoints
     if len(keypoints) == 0:
         print("No valid frames with keypoints detected.")
-        return None  # Return None if no keypoints were detected in any frame
+        return None
 
-    # Convert keypoints into a numpy array
     keypoints = np.array(keypoints)
 
-    # Predict probabilities for each frame
-    predictions = model.predict(keypoints)
+    # ➕ Form sequences if needed by the model (LSTM style)
+    sequence_length = 10
+    if len(keypoints) < sequence_length:
+        print("Not enough valid keypoints to form sequences.")
+        return None
 
-    # Return the mean probability distribution across all frames (for each class)
+    sequences = []
+    for i in range(len(keypoints) - sequence_length + 1):
+        sequences.append(keypoints[i:i+sequence_length])
+    sequences = np.array(sequences)
+
+    predictions = model.predict(sequences)
     avg_probabilities = np.mean(predictions, axis=0)
+    predicted_index = int(np.argmax(avg_probabilities))
+    confidence = float(np.max(avg_probabilities))
+    label = label_map[predicted_index] if label_map else f"Class {predicted_index}"
 
-    # Return the predicted probabilities for each class
-    return avg_probabilities
+    return label, confidence, avg_probabilities
 
 # Function to predict heatmap
 def predict_heatmap(image_path):
     img = image.load_img(image_path, target_size=(128, 128))
-    img_array = image.img_to_array(img)
-    img_array = img_array / 255.0
+    img_array = image.img_to_array(img) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
     prediction = heatmap_model.predict(img_array)
     return prediction[0][0]
 
 # Function to predict ASD based on facial expressions
 def predict_asd(expressions):
-    # Encode the input data
     new_data_encoded = one_hot_encoder.transform([expressions])
     prediction = asd_model.predict(new_data_encoded)
     result = 'Non-ASD' if prediction[0][0] > 0.5 else 'ASD'
     return result, float(prediction[0][0])
 
+import glob
 
 @app.route('/predict-combined', methods=['POST'])
 def predict_combined_endpoint():
     try:
         print("Request Form:", request.form)
 
-        # Parse expressions
         expressions = request.form.get('expressions')
         if expressions:
             try:
                 expressions = json.loads(expressions)
                 print("Parsed Expressions:", expressions)
             except json.JSONDecodeError as e:
-                print("Error parsing expressions:", e)
                 return jsonify({'error': 'Invalid expressions format. Expected a JSON array.'}), 400
         else:
             expressions = None
 
-        # Load video and image from predefined folders
-        video_folder = 'testFiles/video'
-        image_folder = 'testFiles/video'
+        # ✅ Find the latest video (.mp4) and image (.png) files
+        video_files = glob.glob(os.path.join('testFiles/video', '*.webm'))
+        image_files = glob.glob(os.path.join('testFiles/video', '*.png'))
 
-        # Get the first file from each folder
-        # Use the specific video file named 'video.webm'
-        video_path = os.path.join(video_folder, 'video.webm')
-        if not os.path.isfile(video_path):
-            return jsonify({'error': 'video.webm not found in the video folder.'}), 400
+        if not video_files:
+            return jsonify({'error': 'No video file (.mp4) found in video folder.'}), 400
+        if not image_files:
+            return jsonify({'error': 'No image file (.png) found in video folder.'}), 400
 
-        image_path = os.path.join(image_folder, 'lineart.png')
-        if not os.path.isfile(image_path):
-            return jsonify({'error': 'lineart.png not found in the image folder.'}), 400
+        # ✅ Sort by modification time and pick the latest
+        latest_video = max(video_files, key=os.path.getmtime)
+        latest_image = max(image_files, key=os.path.getmtime)
 
-        print("Using Video Path:", video_path)
-        print("Using Image Path:", image_path)
+        print("Latest video file:", latest_video)
+        print("Latest image file:", latest_image)
 
-        # Initialize results
-        behavior_result = None
-        behavior_confidence = None
-        heatmap_result = None
-        heatmap_confidence = None
-        asd_result = None
-        asd_confidence = None
+        behavior_result, behavior_confidence, _ = None, None, None
+        heatmap_result, heatmap_confidence = None, None
+        asd_result, asd_confidence = None, None
 
-        # Get predictions from each model
-        if video_path:
-            behavior_probabilities = predict_behavior(video_path, behavior_model)
-            if behavior_probabilities is not None:
-                behavior_result = 'ASD' if np.argmax(behavior_probabilities) == 0 else 'Non-ASD'
-                behavior_confidence = float(behavior_probabilities[np.argmax(behavior_probabilities)])
-                print("Behavior Result:", behavior_result)
-                print("Behavior Confidence:", behavior_confidence)
+        # ✅ Behavior prediction
+        label_map = {0: "ASD", 1: "Non-ASD"}
+        result = predict_behavior(latest_video, behavior_model, label_map)
+        if result is not None:
+            behavior_result, behavior_confidence, _ = result
+            print("Behavior Result:", behavior_result)
+        else:
+            print("Behavior prediction failed.")
 
-        if image_path:
-            heatmap_confidence = predict_heatmap(image_path)
-            heatmap_result = "ASD" if heatmap_confidence <= 0.5 else "Non-ASD"
-            print("Heatmap Confidence:", heatmap_confidence)
-            print("Heatmap Result:", heatmap_result)
+        # ✅ Heatmap prediction
+        heatmap_confidence = predict_heatmap(latest_image)
+        heatmap_result = "ASD" if heatmap_confidence <= 0.5 else "Non-ASD"
+        print("Heatmap Result:", heatmap_result)
 
+        # ✅ Expression-based ASD prediction
         if expressions:
             asd_result, asd_confidence = predict_asd(expressions)
             print("ASD Result:", asd_result)
-            print("ASD Confidence:", asd_confidence)
 
-        # Combine results using weighted average
-        weights = {
-            'behavior': 0.4,
-            'heatmap': 0.4,
-            'asd': 0.2
-        }
-
-        prediction_map = {
-            'autism': 1,
-            'TD': 0,
-            'ASD': 1,
-            'NON ASD': 0,
-            'Non-ASD': 0
-        }
+        # ✅ Combine results
+        weights = {'behavior': 0.4, 'heatmap': 0.4, 'asd': 0.2}
+        prediction_map = {'autism': 1, 'TD': 0, 'ASD': 1, 'NON ASD': 0, 'Non-ASD': 0}
 
         weighted_sum = 0
         total_weight = 0
@@ -207,8 +185,8 @@ def predict_combined_endpoint():
             total_weight += weights['behavior']
 
         if heatmap_result:
-            heatmap_score = prediction_map.get(heatmap_result, 0) * (1 - heatmap_confidence if heatmap_result == 'ASD' else heatmap_confidence)
-            weighted_sum += heatmap_score * weights['heatmap']
+            score = 1 - heatmap_confidence if heatmap_result == 'ASD' else heatmap_confidence
+            weighted_sum += prediction_map.get(heatmap_result, 0) * score * weights['heatmap']
             total_weight += weights['heatmap']
 
         if asd_result:
@@ -244,26 +222,7 @@ def predict_combined_endpoint():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# @app.route('/test-combined', methods=['GET'])
-# def test_combined_endpoint():
-#     try:
-#         # Hardcoded test data
-#         video_path = './test_video.mp4'  # Replace with the path to a test video
-#         image_path = './test_image.png'  # Replace with the path to a test image
-#         expressions = ['Happy', 'Sad', 'Angry', 'No answer']
-
-#         # Simulate a request to /predict-combined
-#         response = predict_combined_endpoint({
-#             'video_path': video_path,
-#             'image_path': image_path,
-#             'expressions': expressions
-#         })
-
-#         return response
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    # Create the uploads directory if it doesn't exist
     os.makedirs('uploads', exist_ok=True)
     app.run(port=5002, debug=True)
