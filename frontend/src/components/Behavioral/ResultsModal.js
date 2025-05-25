@@ -31,7 +31,7 @@ const style = {
 
 export default function ResultsModal({ modalOpen, handleModalOpen, handleModalClose, data }) {
   useEffect(() => {
-    // console.log(data);
+    console.log(data);
   }, [data]);
 
   const [selectedValue, setSelectedValue] = useState("");
@@ -77,27 +77,15 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
                 }}
               >
                 <h3>Behavioral Risk</h3>
-                {/* <p>
-                  The probability of showing autistic traits is{" "}
+                <p>
+                  Model Confidence:{" "}
                   {data.details.behavior.confidence !== null
-                    ? `${(100 - data.details.behavior.confidence * 100).toFixed(2)}%`
-                    : "N/A"}
-                  .
-                </p> */}
-
+                    ? `${(data.details.behavior.confidence * 100).toFixed(2)}%`
+                    : "Poor video quality"}
+                </p>
                 <p>
                   Prediction:{" "}
-                  <strong>
-                    {data.details.behavior.confidence !== null
-                      ? (() => {
-                          const confidence = data.details.behavior.confidence * 100;
-                          if (confidence < 80) return "Exhibits no autistic behaviors.";
-                          if (confidence >= 80 && confidence < 85)
-                            return "Exhibits mild autistic behaviors.";
-                          return "Exhibits severe autistic behaviors.";
-                        })()
-                      : "N/A"}
-                  </strong>
+                  <strong>{data.details.behavior.prediction || "Poor video quality"}</strong>
                 </p>
               </div>
 
@@ -112,31 +100,16 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
               >
                 <h3>Facial Expressions Recognition</h3>
                 <p>
-                  The probability of showing autistic traits is{" "}
+                  Model Confidence:{" "}
                   {data.details.facial_expressions_recognition.confidence !== null
-                    ? `${(
-                        100 -
-                        data.details.facial_expressions_recognition.confidence * 100
-                      ).toFixed(2)}%`
+                    ? `${(data.details.facial_expressions_recognition.confidence * 100).toFixed(
+                        2
+                      )}%`
                     : "N/A"}
-                  .
                 </p>
-
                 <p>
                   Prediction:{" "}
-                  <strong>
-                    {data.details.facial_expressions_recognition.confidence !== null
-                      ? (() => {
-                          const confidence =
-                            100 - data.details.facial_expressions_recognition.confidence * 100;
-                          if (confidence < 60)
-                            return "Strong ability to recognize facial expressions.";
-                          if (confidence < 75)
-                            return "Moderate ability to recognize facial expressions.";
-                          return "Has difficulty recognizing facial expressions.";
-                        })()
-                      : "N/A"}
-                  </strong>
+                  <strong>{data.details.facial_expressions_recognition.prediction || "N/A"}</strong>
                 </p>
               </div>
 
@@ -151,25 +124,13 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
               >
                 <h3>Heatmap Analysis</h3>
                 <p>
-                  The probability of showing autistic traits is{" "}
+                  Model Confidence:{" "}
                   {data.details.heatmap.confidence !== null
-                    ? `${(100 - data.details.heatmap.confidence * 100).toFixed(2)}%`
+                    ? `${(data.details.heatmap.confidence * 100).toFixed(8)}%`
                     : "N/A"}
-                  .
                 </p>
-
                 <p>
-                  Prediction:{" "}
-                  <strong>
-                    {data.details.heatmap.confidence !== null
-                      ? (() => {
-                          const confidence = 100 - data.details.heatmap.confidence * 100;
-                          if (confidence < 60) return "Displays strong, focused gaze patterns.";
-                          if (confidence < 75) return "Moderate focus in gaze patterns.";
-                          return "Displays inconsistent gaze patterns.";
-                        })()
-                      : "N/A"}
-                  </strong>
+                  Prediction: <strong>{data.details.heatmap.prediction || "N/A"}</strong>
                 </p>
               </div>
 
@@ -185,7 +146,7 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
               >
                 <h3>
                   Final Prediction:{" "}
-                  <span style={{ color: "#007b00" }}>{data.final_prediction}</span>
+                  <span style={{ color: "#007b00" }}>{data.final_prediction || "N/A"}</span>
                 </h3>
                 <p>
                   There is{" "}
