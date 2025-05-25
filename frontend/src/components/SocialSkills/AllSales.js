@@ -128,7 +128,19 @@ export default function AllSales() {
       // }}
       >
         <div className="d-flex flex-direction-column justify-content-between m-2">
-          <h3 style={{ color: "#1C325B", marginLeft: "100px" }}>My Responses</h3>
+          <h3
+            style={{
+              color: "#1C325B",
+              textAlign: "center",
+              // marginLeft: "100px",
+              fontFamily: "Playfair Display, serif",
+              fontStyle: "normal",
+              fontWeight: "700",
+              fontSize: "28px",
+            }}
+          >
+            My Responses
+          </h3>
 
           <div className="mb-31">
             <Button
@@ -141,14 +153,15 @@ export default function AllSales() {
                 textTransform: "uppercase",
                 letterSpacing: "2px",
                 fontSize: "16px",
-                width: "200px",
+                width: "130px",
                 height: "36px",
                 border: "none",
                 cursor: "pointer",
-                marginLeft: "900px",
+                marginLeft: "950px",
+                borderRadius: "5px",
               }}
             >
-              Export to Excel
+              Export
             </Button>
           </div>
         </div>
@@ -157,7 +170,17 @@ export default function AllSales() {
           {filteredData.map((item, index) => (
             <div className="card2" key={item._id} style={cardStyle2}>
               <div className="card2-body">
-                <h5 className="card2-title">Response {index + 1}</h5>
+                <h5
+                  className="card2-title"
+                  style={{
+                    fontFamily: "Lora, serif",
+                    fontStyle: "normal",
+                    fontWeight: "bold",
+                    fontSize: "20px",
+                  }}
+                >
+                  Response {index + 1}
+                </h5>
                 <p className="card2-text">
                   <strong>1. </strong> {item.q1}
                   <br />
@@ -182,7 +205,7 @@ export default function AllSales() {
                   <strong>Prediction: </strong> {item.risk_prediction} {/* Add this line */}
                 </p>
                 <div className="d-flex justify-content-between">
-                  <a href="/update">
+                  {/* <a href="/update">
                     <Button
                       variant="success"
                       onClick={() =>
@@ -204,7 +227,7 @@ export default function AllSales() {
                     >
                       Edit
                     </Button>
-                  </a>
+                  </a> */}
                   <Button
                     variant="danger"
                     onClick={() => handleDeleteClick(item._id)}
@@ -213,6 +236,19 @@ export default function AllSales() {
                       backgroundColor: "red",
                       borderColor: "red",
                       color: "white",
+                      marginLeft: "800px",
+                      padding: "12px 40px",
+                      borderRadius: "5px",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: "16px",
+                      width: "10%",
+                      marginTop: "15px",
+                      marginLeft: "auto",
+                      //display: "block",
+                      textAlign: "center",
+                      display: "flex", // Ensure flexbox is used
+                      justifyContent: "center", // Horizontally center text
                     }}
                   >
                     Delete
@@ -271,6 +307,7 @@ export default function AllSales() {
               backgroundColor: "red",
               borderColor: "red",
               color: "white",
+              marginLeft: "10px",
             }}
           >
             Delete

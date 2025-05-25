@@ -62,6 +62,7 @@ export default function InitialQuestion() {
     height: "36px",
     border: "none",
     cursor: "pointer",
+    borderRadius: "5px",
   };
 
   const lableStyle = {
@@ -77,6 +78,7 @@ export default function InitialQuestion() {
     backdropFilter: "blur(5px)",
     background: "linear-gradient(rgba(255, 255, 255, 0.7),rgba(255, 255, 255, 0.3))",
     width: "400px",
+    marginLeft: "270px",
   };
 
   const containerStyle = {

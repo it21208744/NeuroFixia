@@ -6,7 +6,9 @@ import goodJobImage from "./images/micky.png";
 import goodJobSound from "./images/aw.mp3";
 import wrongSound from "./images/no.wav";
 import hugImage from "./images/hug.gif";
-import downloadImg from "./images/sback.jpg";
+//import downloadImg from "./images/sback.jpg";
+import downloadImg from "./images/12121.png";
+import downImg from "./images/cart.png";
 import helloImg from "./images/removeh.png";
 import jumpImg from "./images/removejump.png";
 import noseImg from "./images/removenose.png";
@@ -130,6 +132,7 @@ const Modal = ({ finalScore, onClose }) => {
           padding: "20px",
           borderRadius: "10px",
           textAlign: "center",
+          marginLeft: "320px",
         }}
       >
         <h2>Level Complete!</h2>
@@ -409,13 +412,13 @@ export default function SimonSaysGame() {
   return (
     <>
       <div
-      // style={{
-      //   backgroundImage: `url(${downloadImg})`,
-      //   backgroundRepeat: "no-repeat",
-      //   backgroundSize: "cover",
-      //   width: "100vw",
-      //   height: "300vh",
-      // }}
+        style={{
+          backgroundImage: gameStarted ? `url(${downImg})` : `url(${downloadImg})`,
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
+          width: "79vw",
+          height: "60vh",
+        }}
       >
         <center>
           <h1 className="text-xl font-bold mb-4">Simon Says Game</h1>
