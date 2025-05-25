@@ -72,11 +72,12 @@ function Tables() {
                 indicatorColor="secondary"
                 aria-label="Social skills"
               >
-                <Tab value="one" label="InitialQuestion" />
-                <Tab value="two" label="Questionnaire" />
-                <Tab value="three" label="AllSales" />
-                <Tab value="four" label="Simon" />
+                <Tab value="one" label="Questionnaire" />
+                {/* <Tab value="two" label="Q2" /> */}
+                <Tab value="three" label="My Responses" />
+
                 <Tab value="five" label="Progress" />
+                <Tab value="four" label="Improvement Activity" />
               </Tabs>
             </Grid>
             <Grid item xs={12}>

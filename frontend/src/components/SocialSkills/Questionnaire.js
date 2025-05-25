@@ -39,11 +39,11 @@ export default function Questionnaire() {
       english: {
         title: "Evaluation Form",
         q1: "1. Does your child point to indicate that s/he wants something? (e.g. a toy that is out of reach) ?",
-        q2: "2. Does your child like to play with other children?",
+        q2: "2. If you or someone else in the family is visibly upset, does your child show signs of wanting to comfort them? (e.g. stroking hair, hugging them)?",
         q3: "3. Does your child let you know when he/she is hungry, thirsty, or wants something specfic?",
-        q4: "4. Does your child follow where you are looking? ",
-        q5: "5. Can your child understand simple instructions given, such as 'Give the book to Amma' or 'Bring your slippers'?",
-        q6: "6. If you or someone else in the family is visibly upset, does your child show signs of wanting to comfort them? (e.g. stroking hair, hugging them)?",
+        q4: "4. Can your child understand simple instructions given, such as 'Give the book to Amma' or 'Bring your slippers'?",
+        q5: "5. Does your child follow where you are looking?",
+        q6: "6. Does your child like to play with other children?",
         q7: "7. Does your child behave well in crowded places like markets, bus stands, or festivals?",
         q8: "8. Does your child use simple gestures? (e.g. wave goodbye) ",
         q9: "9. Describe in detail how your child reacts when you call their name.",
@@ -59,11 +59,11 @@ export default function Questionnaire() {
       sinhala: {
         title: "ප්‍රශ්නාවලි පෝරමය",
         q1: "1. ඔබේ දරුවා යමක් අවශ්‍ය බව පෙන්වීමට ඒ දෙසට අත දිගු කරනවාද? (උදා: ළඟා විය නොහැකි සෙල්ලම් බඩුවක්)?",
-        q2: "2. ඔබේ දරුවා අනෙක් දරුවන් සමඟ එක්වී සෙල්ලම් කිරීමට කැමතිද?",
+        q2: "2. ඔබ හෝ පවුලේ වෙනත් අයෙකු කලබල වී හෝ දුකට පත්වී ඇත්නම්, ඔබේ දරුවා ඔවුන්ව සනසාලීමට කැමති බවට සලකුණු පෙන්වනවාද?",
         q3: "3. ඔබේ දරුවා ඔහුට/ඇයට බඩගිනි, පිපාසය, හෝ නිශ්චිත  යමක් අවශ්‍ය වූ විට  ඔබට දන්වනවාද?",
-        q4: "4. ඔබේ දරුවා ඔබ බලන දෙස අවදානය යොමු කරනවාද?",
-        q5: "5. 'අම්මාට පොත දෙන්න' හෝ 'ඔබේ සෙරෙප්පු රැගෙන එන්න' වැනි සරල උපදෙස් ඔබේ දරුවාට තේරුම් ගත හැකිද?",
-        q6: "6. ඔබ හෝ පවුලේ වෙනත් අයෙකු කලබල වී හෝ දුකට පත්වී ඇත්නම්, ඔබේ දරුවා ඔවුන්ව සනසාලීමට කැමති බවට සලකුණු පෙන්වනවාද?",
+        q4: "4. 'අම්මාට පොත දෙන්න' හෝ 'ඔබේ සෙරෙප්පු රැගෙන එන්න' වැනි සරල උපදෙස් ඔබේ දරුවාට තේරුම් ගත හැකිද?",
+        q5: "5. ඔබේ දරුවා ඔබ බලන දෙස අවදානය යොමු කරනවාද?",
+        q6: "6. ඔබේ දරුවා අනෙක් දරුවන් සමඟ එක්වී සෙල්ලම් කිරීමට කැමතිද?",
         q7: "7. වෙළඳපොළවල්, බස් නැවතුම්පොළවල් හෝ උත්සව වැනි ජනාකීර්ණ ස්ථානවල ඔබේ දරුවා හොඳින් හැසිරෙනවාද?",
         q8: "8. ඔබේ දරුවා සරල අභිනයන් භාවිතා කරනවාද? (උදා: අත වනමින් සමුගැනීම)?",
         q9: "9. ඔබ ඔබේ දරුවාගේ නම අමතන විට ඔහු ප්‍රතිචාර දක්වන ආකාරය විස්තර කරන්න.",
@@ -161,7 +161,7 @@ export default function Questionnaire() {
       if (lang === "sinhala") {
         setResult(
           riskPrediction === 1
-            ? "ඔබේ දරුවාට ඔටිසම් රෝගයට සම්බන්ධ සමාජ කුසලතා දුෂ්කරතා තිබේ, වැඩිදියුණු කිරීමේ ක්‍රියාකාරකම් පරීක්ෂා කරන්න"
+            ? "දරුවාට ඔටිසම් රෝගයට සම්බන්ධ සමාජ කුසලතා දුෂ්කරතා තිබේ, වැඩිදියුණු කිරීමේ ක්‍රියාකාරකම් පරීක්ෂා කරන්න"
             : "අවදානමක් නැත"
         );
       } else if (lang === "tamil") {
@@ -170,7 +170,7 @@ export default function Questionnaire() {
         setResult(
           riskPrediction === 1
             ? "Your child has social skills difficulties related to autism, Checkout improvement activities"
-            : "No Risk Detected"
+            : "No Risk Detected for your child"
         );
       }
 
@@ -208,7 +208,11 @@ export default function Questionnaire() {
     marginBottom: "8px",
     display: "block",
     color: "#1C325B",
-    fontWeight: "bold",
+    fontWeight: "500",
+    fontFamily: "Rubik, sans-serif",
+    fontStyle: "normal",
+    // fontWeight: "700",
+    fontSize: "20px",
   };
   const inputStyle = {
     width: "100%",
@@ -232,6 +236,23 @@ export default function Questionnaire() {
     marginLeft: "auto",
     //display: "block",
     textAlign: "center",
+    display: "flex", // Ensure flexbox is used
+    justifyContent: "center", // Horizontally center text
+    alignItems: "center", // Vertically center text
+  };
+  const buttonStylee = {
+    backgroundImage: "linear-gradient(125deg,#1C325B,#4A628A)",
+    color: "#fff",
+    padding: "12px 40px",
+    borderRadius: "5px",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "16px",
+    width: "20%",
+    marginTop: "15px",
+    marginLeft: "200px",
+    //display: "block",
+    textAlign: "left",
     display: "flex", // Ensure flexbox is used
     justifyContent: "center", // Horizontally center text
     alignItems: "center", // Vertically center text
@@ -261,7 +282,8 @@ export default function Questionnaire() {
   const popupStyle = {
     position: "fixed",
     top: "50%",
-    left: "50%",
+    //left: "40%",
+    marginLeft: "600px",
     transform: "translate(-50%, -50%)",
     backgroundColor: "#fff",
     padding: "40px",
@@ -274,6 +296,7 @@ export default function Questionnaire() {
     position: "fixed",
     top: 0,
     left: 0,
+    //marginLeft: "980px",
     right: 0,
     bottom: 0,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -291,12 +314,23 @@ export default function Questionnaire() {
       //   height: "300vh",
       // }}
       >
-        <h3 style={{ textAlign: "center", fontWeight: "10px" }}>{translatedLabels.title}</h3>
+        <h3
+          style={{
+            textAlign: "center",
+            fontFamily: "Playfair Display, serif",
+            fontStyle: "normal",
+            fontWeight: "bold",
+            fontSize: "28px",
+          }}
+        >
+          {translatedLabels.title}
+        </h3>
         <form onSubmit={handleSubmit} style={containerStyle}>
           {[...Array(8).keys()].map((i) => (
             <div key={i} style={{ width: "100%" }}>
               <label style={labelStyle}>{translatedLabels[`q${i + 1}`]}</label>
               <select
+                required
                 value={eval(`q${i + 1}`)}
                 onChange={(e) => eval(`setQ${i + 1}(e.target.value)`)}
                 style={inputStyle}
@@ -314,6 +348,7 @@ export default function Questionnaire() {
             <div key={i + 8} style={lastFieldStyle}>
               <label style={labelStyle}>{translatedLabels[`q${i + 9}`]}</label>
               <textarea
+                required
                 value={eval(`q${i + 9}`)}
                 onChange={(e) => eval(`setQ${i + 9}(e.target.value)`)}
                 style={inputStyle}
@@ -350,7 +385,7 @@ export default function Questionnaire() {
             <div style={popupStyle}>
               <h3>{translatedLabels.resultMessage}</h3>
               <p>{result}</p>
-              <button onClick={closePopup} style={buttonStyle}>
+              <button onClick={closePopup} style={buttonStylee}>
                 {translatedLabels.close}
               </button>
             </div>

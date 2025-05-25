@@ -6,7 +6,9 @@ import goodJobImage from "./images/micky.png";
 import goodJobSound from "./images/aw.mp3";
 import wrongSound from "./images/no.wav";
 import hugImage from "./images/hug.gif";
-import downloadImg from "./images/sback.jpg";
+//import downloadImg from "./images/sback.jpg";
+import downloadImg from "./images/12121.png";
+import downImg from "./images/cart.png";
 import helloImg from "./images/removeh.png";
 import jumpImg from "./images/removejump.png";
 import noseImg from "./images/removenose.png";
@@ -130,6 +132,7 @@ const Modal = ({ finalScore, onClose }) => {
           padding: "20px",
           borderRadius: "10px",
           textAlign: "center",
+          marginLeft: "320px",
         }}
       >
         <h2>Level Complete!</h2>
@@ -178,7 +181,8 @@ const InstructionsModal = ({ onClose }) => {
           backgroundColor: "#fff",
           padding: "20px",
           borderRadius: "10px",
-          textAlign: "center",
+          textAlign: "left",
+          marginLeft: "300px",
         }}
       >
         <h2>Instructions</h2>
@@ -367,7 +371,7 @@ export default function SimonSaysGame() {
     fontSize: "16px",
     width: "20%",
     marginTop: "18px",
-    marginLeft: "600px",
+    marginLeft: "500px",
     marginRight: "100px",
     display: "block",
     textAlign: "center",
@@ -383,7 +387,7 @@ export default function SimonSaysGame() {
     fontSize: "16px",
     width: "20%",
     marginTop: "5px",
-    marginLeft: "600px",
+    marginLeft: "500px",
     marginRight: "100px",
     display: "block",
     textAlign: "center",
@@ -399,7 +403,7 @@ export default function SimonSaysGame() {
     fontSize: "16px",
     width: "20%",
     marginTop: "15px",
-    marginLeft: "600px",
+    marginLeft: "500px",
     marginRight: "100px",
     display: "block",
     textAlign: "center",
@@ -409,11 +413,11 @@ export default function SimonSaysGame() {
     <>
       <div
         style={{
-          backgroundImage: `url(${downloadImg})`,
+          backgroundImage: gameStarted ? `url(${downImg})` : `url(${downloadImg})`,
           backgroundRepeat: "no-repeat",
           backgroundSize: "cover",
-          width: "100vw",
-          height: "300vh",
+          width: "79vw",
+          height: "60vh",
         }}
       >
         <center>

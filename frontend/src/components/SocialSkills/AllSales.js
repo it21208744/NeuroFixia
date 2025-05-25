@@ -94,7 +94,7 @@ export default function AllSales() {
     XLSX.writeFile(workbook, "SalesData.xlsx");
   };
 
-  const cardStyle = {
+  const cardStyle2 = {
     overflow: "hidden",
     boxShadow: "0 2px 20px",
     borderRadius: "$radius",
@@ -119,37 +119,69 @@ export default function AllSales() {
   return (
     <>
       <div
-        style={{
-          backgroundImage: `url(${downloadImg})`,
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-          width: "100vw",
-          height: "100vh",
-        }}
+      // style={{
+      //   backgroundImage: `url(${downloadImg})`,
+      //   backgroundRepeat: "no-repeat",
+      //   backgroundSize: "cover",
+      //   width: "100vw",
+      //   height: "100vh",
+      // }}
       >
         <div className="d-flex flex-direction-column justify-content-between m-2">
-          <h3 style={{ color: "#1C325B", marginLeft: "100px" }}>Response submitted</h3>
+          <h3
+            style={{
+              color: "#1C325B",
+              textAlign: "center",
+              // marginLeft: "100px",
+              fontFamily: "Playfair Display, serif",
+              fontStyle: "normal",
+              fontWeight: "700",
+              fontSize: "28px",
+            }}
+          >
+            My Responses
+          </h3>
 
-          <div className="mb-3">
+          <div className="mb-31">
             <Button
               variant="success"
               onClick={exportToExcel}
               style={{
-                marginRight: "150px",
+                display: "inline-block",
                 backgroundImage: "linear-gradient(125deg,#1C325B,#4A628A)",
+                color: "#fff",
+                textTransform: "uppercase",
+                letterSpacing: "2px",
+                fontSize: "16px",
+                width: "130px",
+                height: "36px",
+                border: "none",
+                cursor: "pointer",
+                marginLeft: "950px",
+                borderRadius: "5px",
               }}
             >
-              Export to Excel
+              Export
             </Button>
           </div>
         </div>
 
         <div style={{ padding: "20px" }}>
           {filteredData.map((item, index) => (
-            <div className="card" key={item._id} style={cardStyle}>
-              <div className="card-body">
-                <h5 className="card-title">Response {index + 1}</h5>
-                <p className="card-text">
+            <div className="card2" key={item._id} style={cardStyle2}>
+              <div className="card2-body">
+                <h5
+                  className="card2-title"
+                  style={{
+                    fontFamily: "Lora, serif",
+                    fontStyle: "normal",
+                    fontWeight: "bold",
+                    fontSize: "20px",
+                  }}
+                >
+                  Response {index + 1}
+                </h5>
+                <p className="card2-text">
                   <strong>1. </strong> {item.q1}
                   <br />
                   <strong>2. </strong> {item.q2}
@@ -173,7 +205,7 @@ export default function AllSales() {
                   <strong>Prediction: </strong> {item.risk_prediction} {/* Add this line */}
                 </p>
                 <div className="d-flex justify-content-between">
-                  <a href="/update">
+                  {/* <a href="/update">
                     <Button
                       variant="success"
                       onClick={() =>
@@ -195,8 +227,30 @@ export default function AllSales() {
                     >
                       Edit
                     </Button>
-                  </a>
-                  <Button variant="danger" onClick={() => handleDeleteClick(item._id)}>
+                  </a> */}
+                  <Button
+                    variant="danger"
+                    onClick={() => handleDeleteClick(item._id)}
+                    style={{
+                      // display: "block",
+                      backgroundColor: "red",
+                      borderColor: "red",
+                      color: "white",
+                      marginLeft: "800px",
+                      padding: "12px 40px",
+                      borderRadius: "5px",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: "16px",
+                      width: "10%",
+                      marginTop: "15px",
+                      marginLeft: "auto",
+                      //display: "block",
+                      textAlign: "center",
+                      display: "flex", // Ensure flexbox is used
+                      justifyContent: "center", // Horizontally center text
+                    }}
+                  >
                     Delete
                   </Button>
                 </div>
@@ -206,16 +260,56 @@ export default function AllSales() {
         </div>
       </div>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        style={{
+          display: "block",
+          position: "fixed",
+          top: "20%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 1050,
+          overflow: "hidden",
+          boxShadow: "0 2px 20px",
+          borderRadius: "$radius",
+          transition: "transform 200ms ease-in",
+          padding: "20px",
+          backdropFilter: "blur(50px)",
+          background: "linear-gradient(rgba(255, 255, 255, 0.7),rgba(255, 255, 255, 0.3))",
+          marginLeft: "60px",
+          marginRight: "60px",
+          marginBottom: "20px",
+        }}
+        dialogClassName=""
+      >
         <Modal.Header closeButton>
           <Modal.Title>Delete Confirmation</Modal.Title>
         </Modal.Header>
         <Modal.Body>Are you sure you want to delete this item?</Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowModal(false)}
+            style={{
+              // display: "block",
+              backgroundColor: "ash",
+              borderColor: "ash",
+              color: "black",
+            }}
+          >
             Cancel
           </Button>
-          <Button variant="danger" onClick={handleDelete}>
+          <Button
+            onClick={handleDelete}
+            style={{
+              // display: "block",
+              backgroundColor: "red",
+              borderColor: "red",
+              color: "white",
+              marginLeft: "10px",
+            }}
+          >
             Delete
           </Button>
         </Modal.Footer>
