@@ -22,6 +22,7 @@ import TestResultsChart from "./TestResultsChart";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
+import FacialExpressionGame from "./DraggableExpression";
 
 const VideoPlayer = () => {
   const [modalResponses, setModalResponses] = useState([]);
@@ -304,7 +305,9 @@ const VideoPlayer = () => {
 
       {tabIndex === 2 && (
         <Box mt={4}>
-          <div>activities</div>
+          <div>
+            <FacialExpressionGame />
+          </div>
         </Box>
       )}
 
