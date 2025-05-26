@@ -51,7 +51,7 @@ function Footer({ company, links }) {
       alignItems="center"
       px={1.5}
     >
-      <MDBox
+      {/* <MDBox
         display="flex"
         justifyContent="center"
         alignItems="center"
@@ -73,7 +73,7 @@ function Footer({ company, links }) {
           </MDTypography>
         </Link>
         for a better web.
-      </MDBox>
+      </MDBox> */}
       <MDBox
         component="ul"
         sx={({ breakpoints }) => ({
