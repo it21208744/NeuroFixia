@@ -54,7 +54,7 @@ import Icon from "@mui/material/Icon";
 
 const routes = [
   {
-    type: "collapse",
+    type: "title",
     name: "Dashboard",
     key: "dashboard",
     icon: <Icon fontSize="small">dashboard</Icon>,
@@ -96,7 +96,7 @@ const routes = [
   },
   //temporary-------------------------------
   {
-    type: "collapse",
+    type: "title",
     name: "Tables",
     key: "tables",
     icon: <Icon fontSize="small">table_view</Icon>,
@@ -104,7 +104,7 @@ const routes = [
     component: <Tables />,
   },
   {
-    type: "collapse",
+    type: "title",
     name: "Billing",
     key: "billing",
     icon: <Icon fontSize="small">receipt_long</Icon>,
@@ -112,7 +112,7 @@ const routes = [
     component: <Billing />,
   },
   {
-    type: "collapse",
+    type: "title",
     name: "Notifications",
     key: "notifications",
     icon: <Icon fontSize="small">notifications</Icon>,
@@ -120,7 +120,7 @@ const routes = [
     component: <Notifications />,
   },
   {
-    type: "collapse",
+    type: "title",
     name: "Profile",
     key: "profile",
     icon: <Icon fontSize="small">person</Icon>,
