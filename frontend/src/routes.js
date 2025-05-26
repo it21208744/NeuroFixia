@@ -88,7 +88,7 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "Learning Abilities ",
+    name: "Cognitive Skills ",
     key: "learning",
     icon: <Icon fontSize="small">assignment</Icon>,
     route: "learning",
