@@ -245,13 +245,19 @@ const VideoPlayer = () => {
               sx={{ cursor: "pointer" }}
               onClick={handlePlayVideo}
             >
-              Start test
+              <PlayCircleFilledWhiteIcon />
             </MDBox>
             <Button
               variant="contained"
               color="primary"
               onClick={() => handleNextVideo("")}
-              style={{ position: "fixed", right: "2rem", bottom: "6rem", zIndex: 99 }}
+              sx={{
+                position: "fixed",
+                right: "2rem",
+                bottom: "6rem",
+                zIndex: 99,
+                color: "#ffffff",
+              }}
             >
               Next Video
             </Button>
@@ -259,9 +265,15 @@ const VideoPlayer = () => {
               variant="contained"
               color="secondary"
               onClick={logAllData}
-              style={{ position: "fixed", right: "2rem", bottom: "10rem", zIndex: 99 }}
+              sx={{
+                position: "fixed",
+                right: "2rem",
+                bottom: "10rem",
+                zIndex: 99,
+                color: "#ffffff",
+              }}
             >
-              Log All Data
+              View Results
             </Button>
 
             <div
