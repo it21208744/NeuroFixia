@@ -63,7 +63,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
   useEffect(() => {
     // Setting the navbar type
     if (fixedNavbar) {
-      setNavbarType("sticky");
+      setNavbarType("static");
     } else {
       setNavbarType("static");
     }
@@ -133,7 +133,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
         <MDBox color="inherit" mb={{ xs: 1, md: 0 }} sx={(theme) => navbarRow(theme, { isMini })}>
           <Breadcrumbs icon="home" title={route[route.length - 1]} route={route} light={light} />
         </MDBox>
-        {isMini ? null : (
+        {/* {isMini ? null : (
           <MDBox sx={(theme) => navbarRow(theme, { isMini })}>
             <MDBox pr={1}>
               <MDInput label="Search here" />
@@ -179,7 +179,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
               {renderMenu()}
             </MDBox>
           </MDBox>
-        )}
+        )} */}
       </Toolbar>
     </AppBar>
   );

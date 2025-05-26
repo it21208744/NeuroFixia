@@ -80,7 +80,7 @@ function Basic() {
           storeData(AUTH_KEYS.ACCESS_TOKEN, res.data.token);
           setErr(false);
           return setTimeout(() => {
-            navigate("/dashboard");
+            navigate("/behavioral");
           }, 2000);
         }
         setIsDisabled(false);
