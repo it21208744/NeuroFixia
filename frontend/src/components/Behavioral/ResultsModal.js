@@ -126,7 +126,7 @@ export default function ResultsModal({ modalOpen, handleModalOpen, handleModalCl
                 <p>
                   Model Confidence:{" "}
                   {data.details.heatmap.confidence !== null
-                    ? `${(data.details.heatmap.confidence * 100).toFixed(8)}%`
+                    ? `${(data.details.heatmap.confidence * 100).toFixed(2)}%`
                     : "N/A"}
                 </p>
                 <p>

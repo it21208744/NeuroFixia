@@ -67,7 +67,7 @@ const AuditoryTherapy = ({ userId }) => {
 
       try {
         await axios.post("http://localhost:5000/api/sessions", {
-          userId: "1", // replace with real userId if needed
+          userId: "1",
           sound: key,
           volume: volume[key],
           duration: toleranceTime[key],

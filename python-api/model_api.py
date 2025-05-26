@@ -24,7 +24,7 @@ one_hot_encoder = joblib.load('one_hot_encoder.joblib')
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 
-# Function to extract and save frames with valid keypoints
+# Function to extract and save frames with valid keypoints(if pose is detected; save that frame)
 def extract_and_save_frames_with_keypoints(video_path, output_folder, frame_rate=5):
     os.makedirs(output_folder, exist_ok=True)
     cap = cv2.VideoCapture(video_path)
@@ -48,7 +48,7 @@ def extract_and_save_frames_with_keypoints(video_path, output_folder, frame_rate
 
     cap.release()
 
-# Function to extract keypoints from an image
+# Function to extract keypoints from saved frame
 def extract_keypoints(image_path):
     image = cv2.imread(image_path)
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -82,7 +82,7 @@ def predict_behavior(video_path, model, label_map=None):
 
     keypoints = np.array(keypoints)
 
-    # ➕ Form sequences if needed by the model (LSTM style)
+    # ➕ Form sequences needed by the model (LSTM style)
     sequence_length = 10
     if len(keypoints) < sequence_length:
         print("Not enough valid keypoints to form sequences.")
