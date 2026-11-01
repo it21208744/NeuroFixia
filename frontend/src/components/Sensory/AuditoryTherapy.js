@@ -1,153 +1,153 @@
-// src/components/AuditoryTherapy.js
-import React, { useRef, useState } from "react";
-import axios from "axios";
-import { Card, CardContent, Typography, Slider, Grid, Button, Box } from "@mui/material";
+// Auditory therapy room: gradual exposure to party sounds with volume control.
+// Fixes: sessions were logged for a hard-coded user "1"; changing the slider did not change
+// the volume of a playing sound; sounds kept playing after leaving the page.
+import { useEffect, useRef, useState } from "react";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Slider,
+  Grid,
+  Button,
+  Box,
+  Alert,
+  Chip,
+} from "@mui/material";
+import api from "api/client";
 
-const AuditoryTherapy = ({ userId }) => {
-  const [volume, setVolume] = useState({
-    birthdaySong: 0,
-    partyChatter: 0,
-    kidsLaughing: 0,
-    clapping: 0,
-    fullParty: 0,
-  });
+const SOUNDS = {
+  birthdaySong: ["Birthday song", "/sounds/party/birthday_song.mp3", "🎂"],
+  partyChatter: ["Party chatter", "/sounds/party/party_chatter.mp3", "🗣️"],
+  kidsLaughing: ["Kids laughing", "/sounds/party/kids_laughing.mp3", "😂"],
+  clapping: ["Clapping", "/sounds/party/clapping.mp3", "👏"],
+  fullParty: ["Full party", "/sounds/party/full_party.mp3", "🎉"],
+};
+const keys = Object.keys(SOUNDS);
+const zero = () => Object.fromEntries(keys.map((k) => [k, 0]));
 
-  const [toleranceTime, setToleranceTime] = useState({
-    birthdaySong: 0,
-    partyChatter: 0,
-    kidsLaughing: 0,
-    clapping: 0,
-    fullParty: 0,
-  });
+export default function AuditoryTherapy() {
+  const [volume, setVolume] = useState(() => Object.fromEntries(keys.map((k) => [k, 0.2])));
+  const [seconds, setSeconds] = useState(zero);
+  const [playing, setPlaying] = useState({});
+  const [saved, setSaved] = useState("");
+  const audios = useRef(null);
+  const timers = useRef({});
+  const secondsRef = useRef(seconds);
+  secondsRef.current = seconds;
 
-  const [intervals, setIntervals] = useState({});
+  if (!audios.current) {
+    audios.current = Object.fromEntries(
+      keys.map((k) => {
+        const a = new Audio(SOUNDS[k][1]);
+        a.loop = true;
+        return [k, a];
+      })
+    );
+  }
 
-  const audios = {
-    birthdaySong: useRef(new Audio("/sounds/party/birthday_song.mp3")).current,
-    partyChatter: useRef(new Audio("/sounds/party/party_chatter.mp3")).current,
-    kidsLaughing: useRef(new Audio("/sounds/party/kids_laughing.mp3")).current,
-    clapping: useRef(new Audio("/sounds/party/clapping.mp3")).current,
-    fullParty: useRef(new Audio("/sounds/party/full_party.mp3")).current,
-  };
+  useEffect(
+    () => () => {
+      Object.values(audios.current).forEach((a) => a.pause());
+      Object.values(timers.current).forEach(clearInterval);
+    },
+    []
+  );
 
-  const startSound = (key) => {
-    const audio = audios[key];
-    audio.volume = volume[key];
-    audio.loop = true;
-    audio.play();
-
-    if (!intervals[key]) {
-      const intervalId = setInterval(() => {
-        setToleranceTime((prev) => ({
-          ...prev,
-          [key]: prev[key] + 1,
-        }));
-      }, 1000);
-
-      setIntervals((prev) => ({
-        ...prev,
-        [key]: intervalId,
-      }));
+  const start = (k) => {
+    const a = audios.current[k];
+    a.volume = volume[k];
+    a.play().catch(() => {});
+    if (!timers.current[k]) {
+      timers.current[k] = setInterval(() => setSeconds((s) => ({ ...s, [k]: s[k] + 1 })), 1000);
     }
+    setPlaying((p) => ({ ...p, [k]: true }));
+    setSaved("");
   };
 
-  const stopSound = async (key) => {
-    const audio = audios[key];
-    audio.pause();
-    audio.currentTime = 0;
-
-    if (intervals[key]) {
-      clearInterval(intervals[key]);
-
-      setIntervals((prev) => {
-        const updated = { ...prev };
-        delete updated[key];
-        return updated;
-      });
-
+  const stop = async (k) => {
+    const a = audios.current[k];
+    a.pause();
+    a.currentTime = 0;
+    if (!timers.current[k]) return;
+    clearInterval(timers.current[k]);
+    delete timers.current[k];
+    setPlaying((p) => ({ ...p, [k]: false }));
+    const duration = secondsRef.current[k];
+    setSeconds((s) => ({ ...s, [k]: 0 }));
+    if (duration > 0) {
       try {
-        await axios.post("http://localhost:5000/api/sessions", {
-          userId: "1", // replace with real userId if needed
-          sound: key,
-          volume: volume[key],
-          duration: toleranceTime[key],
-        });
-      } catch (err) {
-        console.error("Logging failed", err);
+        await api.post("/sensory/sessions", { sound: k, volume: volume[k], duration });
+        setSaved(
+          `Saved: ${SOUNDS[k][0]} tolerated for ${duration}s at ${Math.round(
+            volume[k] * 100
+          )}% volume.`
+        );
+      } catch (e) {
+        setSaved("Could not save the session - check your connection.");
       }
-
-      setToleranceTime((prev) => ({
-        ...prev,
-        [key]: 0,
-      }));
     }
   };
 
-  const handleVolumeChange = (key, newValue) => {
-    setVolume((prev) => ({
-      ...prev,
-      [key]: newValue,
-    }));
+  const changeVolume = (k, v) => {
+    setVolume((prev) => ({ ...prev, [k]: v }));
+    audios.current[k].volume = v;
   };
 
   return (
-    <Box p={3}>
-      <Typography variant="h4" align="center" gutterBottom>
-        Auditory Therapy Room
-      </Typography>
-
+    <Box>
+      <Alert severity="info" sx={{ mb: 2, fontSize: "0.875rem" }}>
+        Start each sound at a low volume and raise it slowly while your child stays calm. Press{" "}
+        <b>Stop</b> as soon as they show discomfort - the time they tolerated is saved to Session
+        History so you can see progress.
+      </Alert>
+      {saved && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {saved}
+        </Alert>
+      )}
       <Grid container spacing={3}>
-        {Object.keys(volume).map((key) => (
-          <Grid item xs={12} sm={6} md={4} key={key}>
-            <Card>
+        {keys.map((k) => (
+          <Grid item xs={12} sm={6} md={4} key={k}>
+            <Card sx={{ height: "100%" }}>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  {key.replace(/([A-Z])/g, " $1")}
-                </Typography>
-
-                <Box display="flex" justifyContent="center" mb={2}>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+                  <Typography variant="h6">
+                    {SOUNDS[k][2]} {SOUNDS[k][0]}
+                  </Typography>
+                  {playing[k] && <Chip size="small" color="success" label={`${seconds[k]}s`} />}
+                </Box>
+                <Box display="flex" gap={1} mb={2}>
                   <Button
                     variant="contained"
-                    onClick={() => startSound(key)}
+                    onClick={() => start(k)}
+                    disabled={!!playing[k]}
                     sx={{
-                      mr: 1,
                       backgroundColor: "info.main",
-                      color: "#ffffff !important",
-                      "&:hover": {
-                        backgroundColor: "info.dark",
-                      },
+                      color: "#fff !important",
+                      "&:hover": { backgroundColor: "info.dark" },
                     }}
                   >
                     Play
                   </Button>
                   <Button
                     variant="outlined"
-                    onClick={() => stopSound(key)}
-                    sx={{
-                      borderColor: "error.main",
-                      color: "error.main",
-                      "&:hover": {
-                        borderColor: "error.dark",
-                        color: "error.dark",
-                      },
-                    }}
+                    onClick={() => stop(k)}
+                    disabled={!playing[k]}
+                    sx={{ borderColor: "error.main", color: "error.main" }}
                   >
                     Stop
                   </Button>
                 </Box>
-
-                <Typography gutterBottom>Volume: {Math.round(volume[key] * 100)}%</Typography>
-
+                <Typography variant="body2" gutterBottom>
+                  Volume: {Math.round(volume[k] * 100)}%
+                </Typography>
                 <Slider
-                  value={volume[key]}
-                  onChange={(e, val) => handleVolumeChange(key, val)}
+                  value={volume[k]}
+                  onChange={(e, v) => changeVolume(k, v)}
                   min={0}
                   max={1}
                   step={0.01}
-                  sx={{ mb: 1 }}
                 />
-
-                <Typography variant="body2">Tolerated: {toleranceTime[key]}s</Typography>
               </CardContent>
             </Card>
           </Grid>
@@ -155,6 +155,4 @@ const AuditoryTherapy = ({ userId }) => {
       </Grid>
     </Box>
   );
-};
-
-export default AuditoryTherapy;
+}

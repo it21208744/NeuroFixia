@@ -12,7 +12,7 @@ const imageStyle = {
   border: "3px solid black", // Adds a black border
   objectFit: "cover", // Ensures the image fits inside the rounded frame
   borderRadius: "10px", // Optional: Adds rounded corners
-  marginLeft: "350px",
+  marginInline: "auto",
 };
 
 const buttonStyle = {
@@ -26,7 +26,7 @@ const buttonStyle = {
   margin: "20px 10px",
   width: 50,
   height: 50,
-  marginLeft: "360px",
+  marginInline: "auto",
   marginRight: "-280px",
 };
 
@@ -78,7 +78,9 @@ const Attention3 = () => {
 
   return (
     <div className="text-center p-4">
-      <h1 style={{ marginLeft: "450px", fontSize: "2.5rem", fontWeight: "bold", color: "#16244d" }}>
+      <h1
+        style={{ marginInline: "auto", fontSize: "2.5rem", fontWeight: "bold", color: "#16244d" }}
+      >
         Count the Birds
       </h1>
       <img

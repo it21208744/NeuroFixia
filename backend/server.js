@@ -1,211 +1,68 @@
 require('dotenv').config()
-const express = require('express')
-const connectDB = require('./config/db')
-const userRoutes = require('./routes/userRoutes')
-const modelRoutes = require('./routes/modelRoutes')
-const Prediction = require('./models/Prediction')
-const axios = require('axios')
-const cors = require('cors')
-const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
-const FormData = require('form-data')
-const sessionRoutes = require('./routes/sensory/sessionRoutes'); //sensory
+const express = require('express')
+const cors = require('cors')
+const helmet = require('helmet')
+const morgan = require('morgan')
+const rateLimit = require('express-rate-limit')
+const { connectDB } = require('./config/db')
+const { protect } = require('./middleware/auth')
+const { client: mlClient } = require('./services/ml')
 
+function createApp() {
+  const app = express()
+  app.set('trust proxy', 1)
+  // CSP is disabled because the SPA loads Google Fonts and WebGazer's face-mesh models from CDNs.
+  app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }))
+  const origins = (process.env.CORS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean)
+  app.use(cors(origins.length ? { origin: origins } : undefined))
+  app.use(express.json({ limit: '2mb' }))
+  if (process.env.NODE_ENV !== 'test') app.use(morgan('tiny'))
 
-const app = express()
-connectDB()
-
-app.use(express.json())
-app.use(cors())
-
-// Multer setup for handling file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
-})
-const upload = multer({ storage: storage })
-
-// Function to clean up the uploads directory
-const cleanupUploads = () => {
-  const directory = 'uploads'
-  fs.readdir(directory, (err, files) => {
-    if (err) throw err
-
-    for (const file of files) {
-      fs.unlink(path.join(directory, file), (err) => {
-        if (err) throw err
-      })
+  app.get('/api/health', async (req, res) => {
+    let ml = 'unavailable'
+    try {
+      const { data } = await mlClient().get('/health', { timeout: 3000 })
+      ml = data.status
+    } catch (e) {
+      /* ML service still starting */
     }
+    res.json({ status: 'ok', ml })
   })
+
+  app.use('/api/users', rateLimit({ windowMs: 15 * 60 * 1000, limit: 100 }), require('./routes/users'))
+  app.use('/api/behavioral', protect, require('./routes/behavioral'))
+  app.use('/api/sensory', protect, require('./routes/sensory'))
+  app.use('/api/social', protect, require('./routes/social'))
+  app.use('/api/cognitive', protect, require('./routes/cognitive'))
+  app.use('/api/dashboard', protect, require('./routes/dashboard'))
+  app.use('/api', (req, res) => res.status(404).json({ message: `No API route ${req.method} ${req.originalUrl}` }))
+
+  // Serve the React build (single-container deployment)
+  const build = process.env.FRONTEND_BUILD || path.join(__dirname, '..', 'frontend', 'build')
+  if (fs.existsSync(path.join(build, 'index.html'))) {
+    app.use(express.static(build, { maxAge: '7d', index: false }))
+    app.get('*', (req, res) => res.sendFile(path.join(build, 'index.html')))
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  app.use((err, req, res, next) => {
+    console.error(err)
+    const status = err.status || (err.code === 'LIMIT_FILE_SIZE' ? 413 : 500)
+    res.status(status).json({ message: err.message || 'Server error' })
+  })
+  return app
 }
 
-// Unified route to handle video, image, and form data
-app.post(
-  '/api/upload-all',
-  upload.fields([{ name: 'video' }, { name: 'image' }]),
-  async (req, res) => {
-    try {
-      const videoPath = req.files['video']
-        ? path.join(__dirname, 'uploads', req.files['video'][0].filename)
-        : null
-      const imagePath = req.files['image']
-        ? path.join(__dirname, 'uploads', req.files['image'][0].filename)
-        : null
-      const formData = req.body
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000
+  connectDB()
+    .then(() => createApp().listen(PORT, () => console.log(`[api] listening on :${PORT}`)))
+    .catch((err) => {
+      console.error('[db] connection failed:', err.message)
+      process.exit(1)
+    })
+}
 
-      console.log('Video Path:', videoPath)
-      console.log('Image Path:', imagePath)
-      console.log('Form Data:', formData)
-
-      res.json({
-        success: true,
-        message: 'Data received successfully',
-        videoPath,
-        imagePath,
-        formData,
-      })
-
-      // Cleanup uploaded files
-      if (videoPath) fs.unlinkSync(videoPath)
-      if (imagePath) fs.unlinkSync(imagePath)
-      cleanupUploads() // Cleanup the uploads directory
-    } catch (error) {
-      console.error(error)
-      res.status(500).json({ success: false, message: 'Processing failed' })
-    }
-  }
-)
-
-app.post('/api/analyze-video', upload.single('video'), async (req, res) => {
-  try {
-    console.log('Uploaded File:', req.file) // Log the uploaded file object
-    const videoPath = path.resolve(req.file.path).replace(/\\/g, '/')
-    console.log('Absolute Video Path:', videoPath) // Log the absolute path
-
-    // Call the Python API
-    const pythonApiResponse = await axios.post(
-      'http://127.0.0.1:5002/predict-behavior',
-      {
-        video_path: videoPath,
-      }
-    )
-
-    // Cleanup uploaded file
-    fs.unlinkSync(videoPath)
-    cleanupUploads() // Cleanup the uploads directory
-
-    // Send the response from the Python API back to the client
-    res.json(pythonApiResponse.data)
-  } catch (error) {
-    console.error('Error:', error) // Log the full error
-    res.status(500).json({ error: 'Failed to analyze video' })
-  }
-})
-
-app.post('/api/analyze-heatmap', upload.single('image'), async (req, res) => {
-  try {
-    console.log('Uploaded File:', req.file) // Log the uploaded file object
-    const imagePath = path.resolve(req.file.path).replace(/\\/g, '/')
-    console.log('Absolute Image Path:', imagePath) // Log the absolute path
-
-    // Call the Python API
-    const pythonApiResponse = await axios.post(
-      'http://127.0.0.1:5002/predict-heatmap',
-      {
-        image_path: imagePath,
-      }
-    )
-
-    // Cleanup uploaded file
-    fs.unlinkSync(imagePath)
-    cleanupUploads() // Cleanup the uploads directory
-
-    // Send the response from the Python API back to the client
-    res.json(pythonApiResponse.data)
-  } catch (error) {
-    console.error('Error:', error) // Log the full error
-    res.status(500).json({ error: 'Failed to analyze image' })
-  }
-})
-
-app.post('/api/analyze-asd', async (req, res) => {
-  try {
-    const expressions = req.body.expressions
-    console.log('Expressions:', expressions) // Log the expressions
-
-    // Call the Python API
-    const pythonApiResponse = await axios.post(
-      'http://127.0.0.1:5002/predict-asd',
-      {
-        expressions: expressions,
-      }
-    )
-
-    // Send the response from the Python API back to the client
-    res.json(pythonApiResponse.data)
-  } catch (error) {
-    console.error('Error:', error) // Log the full error
-    res.status(500).json({ error: 'Failed to analyze expressions' })
-  }
-})
-
-app.post(
-  '/api/analyze-combined',
-  upload.fields([{ name: 'video' }, { name: 'image' }]),
-  async (req, res) => {
-    try {
-      const expressions = req.body.expressions
-        ? JSON.parse(req.body.expressions).map((expr) =>
-            expr.replace(/"/g, "'")
-          )
-        : null
-
-      console.log('Expressions:', expressions)
-
-      const formData = new FormData()
-
-      if (expressions) {
-        formData.append('expressions', JSON.stringify(expressions))
-      }
-
-      const pythonApiResponse = await axios.post(
-        'http://127.0.0.1:5002/predict-combined',
-        formData,
-        {
-          headers: {
-            ...formData.getHeaders(),
-          },
-        }
-      )
-
-      // Save the response to MongoDB
-      const savedPrediction = new Prediction(pythonApiResponse.data)
-      await savedPrediction.save()
-
-      res.json(pythonApiResponse.data)
-      console.log(pythonApiResponse.data)
-    } catch (error) {
-      console.error('Error:', error)
-      res.status(500).json({ error: 'Failed to analyze expressions' })
-    }
-  }
-)
-
-app.get('/api/predictions', async (req, res) => {
-  try {
-    const predictions = await Prediction.find().sort({ createdAt: -1 }) // latest first
-    res.json(predictions)
-  } catch (error) {
-    console.error('Error fetching predictions:', error)
-    res.status(500).json({ error: 'Failed to fetch predictions' })
-  }
-})
-
-app.use('/api/users', userRoutes)
-app.use('/api/models', modelRoutes)
-app.use('/api/sessions', sessionRoutes); //sensory
-
-
-const PORT = process.env.PORT || 5000
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+module.exports = { createApp }

@@ -90,7 +90,7 @@ buttonm:hover {
   cursor: pointer; /* Change cursor to pointer on hover */
   transition: background-color 0.3s ease; /* Add smooth background color transition */
   margin: 10px; /* Add margin around each button */
-  margin-left: 150px;
+  margin-left: auto;
   margin-right: -100px;
 }
 
@@ -111,6 +111,6 @@ buttonm:hover {
 }
 
 .test-image-left {
-  margin-left: 400px; /* Add margin to the left */
+  margin-left: auto; /* Add margin to the left */
   display: inline-block;
 }

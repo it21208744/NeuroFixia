@@ -70,7 +70,7 @@ h1 {
   margin: 5px 0;
 }
 .feedback-img {
-  width: 150px; /* Adjust to your preferred size */
+  width: min(150px, 100%); /* Adjust to your preferred size */
   height: 100px; /* Adjust to your preferred size */
   margin-top: 20px; /* Add spacing for better visibility */
 }

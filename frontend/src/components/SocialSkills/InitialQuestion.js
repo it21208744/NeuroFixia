@@ -1,250 +1,117 @@
-import React, { useState, useContext } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import prettier from "prettier";
-import downloadImg from "./images/sback.jpg";
-import download from "./images/a.png";
+import { useContext, useState } from "react";
+import Grid from "@mui/material/Grid";
+import Card from "@mui/material/Card";
+import TextField from "@mui/material/TextField";
+import MenuItem from "@mui/material/MenuItem";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Alert from "@mui/material/Alert";
+import MDBox from "components/MDBox";
+import MDTypography from "components/MDTypography";
+import MDButton from "components/MDButton";
 import { LangContext } from "layouts/Social";
+import { useAuth } from "context/AuthContext";
+import api, { errorMessage } from "api/client";
+import { LANGS } from "./translations";
+import illustration from "./images/a.png";
 
 export default function InitialQuestion() {
-  const [age, setAge] = useState("");
-  const [gender, setGender] = useState("");
-  // const [lang, setLang] = useState("");
-  const [showPopup, setShowPopup] = useState(false);
-  const [step, setStep] = useState(1); // Track form steps
+  const { setValue, lang, setLang } = useContext(LangContext);
+  const { user } = useAuth();
+  const [age, setAge] = useState(user?.child?.age ? String(user.child.age) : "");
+  const [gender, setGender] = useState(user?.child?.gender || "");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const navigate = useNavigate();
-  const { setValue, lang, setLang } = useContext(LangContext); // 👈 Use context to change tabs
-
-  function sendData(e) {
-    e.preventDefault();
-
-    const newSales = {
-      age,
-      gender,
-      lang,
-    };
-
-    axios
-      .post("http://localhost:8070/Iroute/add", newSales)
-      .then(() => {
-        // setAge("");
-        // setGender("");
-        // setLang("");
-        setShowPopup(false); // Close popup after submission
-        setValue("two"); // 👈 Switch to Questionnaire tab
-        console.log("setLang Value", lang);
-      })
-      .catch((err) => {
-        alert("Error submitting the form: " + err);
-      });
-  }
-
-  const inputStyle = {
-    display: "block",
-    width: "100%",
-    height: "36px",
-    borderWidth: "0 0 2px 0",
-    borderColor: "#5543ca",
-    fontSize: "18px",
-    fontWeight: "400",
-    lineHeight: "26px",
-  };
-
-  const buttonStyle = {
-    display: "inline-block",
-    backgroundImage: "linear-gradient(125deg,#1C325B,#4A628A)",
-    color: "#fff",
-    textTransform: "uppercase",
-    letterSpacing: "2px",
-    fontSize: "16px",
-    width: "200px",
-    height: "36px",
-    border: "none",
-    cursor: "pointer",
-    borderRadius: "5px",
-  };
-
-  const lableStyle = {
-    color: "#064497",
-  };
-
-  const cardstyle = {
-    overflow: "hidden",
-    boxShadow: "0 2px 20px",
-    borderRadius: "10px",
-    transition: "transform 200ms ease-in",
-    padding: "20px",
-    backdropFilter: "blur(5px)",
-    background: "linear-gradient(rgba(255, 255, 255, 0.7),rgba(255, 255, 255, 0.3))",
-    width: "400px",
-    marginLeft: "270px",
-  };
-
-  const containerStyle = {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "60vh",
-  };
-
-  const imageStyle = {
-    maxWidth: "100%",
-    height: "auto",
-    border: "none",
-  };
-
-  const labels = {
-    sinhala: {
-      age: "වයස",
-      gender: "ස්ත්‍රී පුරුෂ භාවය",
-      male: "පුරුෂ",
-      female: "ස්ත්‍රී",
-      title: "සිංහල",
-    },
-    english: { age: "Age", gender: "Gender", male: "Male", female: "Female", title: "English" },
-    tamil: { age: "வயது", gender: "பாலினம்", male: "ஆண்", female: "பெண்", title: "தமிழ்" },
+  const start = async () => {
+    setError("");
+    setBusy(true);
+    try {
+      await api.post("/social/profile", { age, gender, lang });
+      setValue("two");
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
-    <>
-      <div
-      // style={{
-      //   backgroundImage: `url(${downloadImg})`,
-      //   backgroundRepeat: "no-repeat",
-      //   backgroundSize: "cover",
-      //   width: "100vw",
-      //   height: "100vh",
-      // }}
-      >
-        <div
-          style={{
-            color: "#1C325B",
-            fontWeight: "1000",
-            fontSize: "70px",
-            fontStyle: "oblique",
-            marginLeft: "210px",
-          }}
-        >
-          Social Skills Observation
-        </div>
-        <div>
-          <h3
-            style={{
-              color: "#1C325B",
-              fontWeight: "20",
-              fontSize: "20px",
-              textAlign: "center",
-              marginTop: "10px",
-            }}
+    <Card sx={{ p: { xs: 2, md: 4 } }}>
+      <Grid container spacing={4} alignItems="center">
+        <Grid item xs={12} md={6}>
+          <MDTypography variant="h4" mb={1}>
+            Social skills observation
+          </MDTypography>
+          <MDTypography variant="body2" color="text" mb={3}>
+            A short 10-question questionnaire about your child&apos;s social and communication
+            development. Choose your language - Sinhala and Tamil answers are translated
+            automatically.
+          </MDTypography>
+          <MDTypography variant="button" fontWeight="bold" display="block" mb={1}>
+            Language
+          </MDTypography>
+          <ToggleButtonGroup
+            exclusive
+            value={lang}
+            onChange={(e, v) => v && setLang(v)}
+            sx={{ mb: 3, flexWrap: "wrap" }}
           >
-            {
-              "Answer this brief questionnaire to better understand your child's social and communication "
-            }
-            <br />
-            {"development, tailored to provide helpful insights and support."}
-          </h3>
-        </div>
-
-        <div style={{ textAlign: "center", marginTop: "60px" }}>
-          <button onClick={() => setShowPopup(true)} style={buttonStyle}>
-            Start here
-          </button>
-        </div>
-        <div style={containerStyle}>
-          <img style={imageStyle} src={download} alt="Description of the image" />
-        </div>
-
-        {showPopup && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100vw",
-              height: "100vh",
-              backgroundColor: "rgba(0, 0, 0, 0.5)",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 1000,
-            }}
+            {Object.entries(LANGS).map(([k, v]) => (
+              <ToggleButton key={k} value={k} sx={{ px: 2 }}>
+                {v.label}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Child's age"
+                value={age}
+                inputProps={{ min: 1, max: 18 }}
+                onChange={(e) => setAge(e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                select
+                fullWidth
+                label="Gender"
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                sx={{ "& .MuiInputBase-root": { height: 44 } }}
+              >
+                <MenuItem value="Male">Male</MenuItem>
+                <MenuItem value="Female">Female</MenuItem>
+              </TextField>
+            </Grid>
+          </Grid>
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
+          )}
+          <MDButton
+            variant="gradient"
+            color="success"
+            sx={{ mt: 3 }}
+            onClick={start}
+            disabled={busy || !lang || !age || !gender}
           >
-            <div style={cardstyle}>
-              {step === 1 ? (
-                <div style={{ textAlign: "center" }}>
-                  <h3 style={{ color: "#064497" }}>Select Language</h3>
-                  <div
-                    onChange={(e) => {
-                      setLang(e.target.value);
-                      setStep(2);
-                    }}
-                  >
-                    <label>
-                      <input type="radio" value="sinhala" name="language" /> Sinhala
-                    </label>
-                    <br />
-                    <label>
-                      <input type="radio" value="english" name="language" /> English
-                    </label>
-                    <br />
-                    <label>
-                      <input type="radio" value="tamil" name="language" /> Tamil
-                    </label>
-                  </div>
-                </div>
-              ) : (
-                <form onSubmit={sendData}>
-                  <div style={{ textAlign: "right" }}>
-                    <button
-                      onClick={() => setShowPopup(false)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        color: "#064497",
-                        fontSize: "18px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      ✖
-                    </button>
-                  </div>
-                  <h3 style={{ textAlign: "center", color: "#064497" }}>{labels[lang].title}</h3>
-                  <div className="form-group">
-                    <label style={lableStyle}>{labels[lang].age}</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder={labels[lang].age}
-                      style={inputStyle}
-                      onChange={(e) => setAge(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label style={lableStyle}>{labels[lang].gender}</label>
-                    <select
-                      className="form-control"
-                      style={inputStyle}
-                      onChange={(e) => setGender(e.target.value)}
-                      required
-                    >
-                      <option value="">{labels[lang].gender}</option>
-                      <option value="male">{labels[lang].male}</option>
-                      <option value="female">{labels[lang].female}</option>
-                    </select>
-                  </div>
-                  <div style={{ textAlign: "center", marginTop: "15px" }}>
-                    <button type="submit" className="btn btn-primary" style={buttonStyle}>
-                      Submit
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </>
+            Start questionnaire
+          </MDButton>
+        </Grid>
+        <Grid item xs={12} md={6} textAlign="center">
+          <MDBox
+            component="img"
+            src={illustration}
+            alt=""
+            sx={{ maxWidth: "100%", maxHeight: 360 }}
+          />
+        </Grid>
+      </Grid>
+    </Card>
   );
 }

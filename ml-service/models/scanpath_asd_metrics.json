@@ -1,0 +1,7 @@
+{
+  "cv": "5-fold StratifiedGroupKFold by participant",
+  "auc_mean": 0.7398856496630807,
+  "auc_std": 0.09824668695757159,
+  "accuracy_mean": 0.6909955787488966,
+  "f1_mean": 0.5864614153413191
+}

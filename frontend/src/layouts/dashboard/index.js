@@ -1,163 +1,203 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
-// @mui material components
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Grid from "@mui/material/Grid";
-
-// Material Dashboard 2 React components
+import Card from "@mui/material/Card";
+import Chip from "@mui/material/Chip";
+import Icon from "@mui/material/Icon";
+import Skeleton from "@mui/material/Skeleton";
+import Alert from "@mui/material/Alert";
 import MDBox from "components/MDBox";
-
-// Material Dashboard 2 React example components
+import MDTypography from "components/MDTypography";
+import MDButton from "components/MDButton";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import Footer from "examples/Footer";
-import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
-import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
-import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
+import Disclaimer from "components/common/Disclaimer";
+import api, { errorMessage } from "api/client";
+import { useAuth } from "context/AuthContext";
 
-// Data
-import reportsBarChartData from "layouts/dashboard/data/reportsBarChartData";
-import reportsLineChartData from "layouts/dashboard/data/reportsLineChartData";
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : "");
 
-// Dashboard components
-import Projects from "layouts/dashboard/components/Projects";
-import OrdersOverview from "layouts/dashboard/components/OrdersOverview";
+const modules = [
+  {
+    key: "behavioral",
+    title: "Behavioural",
+    icon: "visibility",
+    color: "info",
+    route: "/behavioral",
+    blurb: "Watch 4 short clips while eye-gaze and movement are analysed, then name the emotions.",
+    result: (s) =>
+      s?.latest && {
+        flag: s.latest.final_prediction === "autism",
+        text: `${Math.round((s.latest.combined_confidence || 0) * 100)}% likelihood of ASD traits`,
+        date: s.latest.createdAt,
+      },
+  },
+  {
+    key: "social",
+    title: "Social Skills",
+    icon: "diversity_3",
+    color: "success",
+    route: "/social",
+    blurb:
+      "A 10-question parent questionnaire in English, Sinhala or Tamil (voice input supported).",
+    result: (s) =>
+      s?.latest && {
+        flag: s.latest.risk_prediction === "Risk Detected",
+        text: s.latest.risk_prediction,
+        date: s.latest.date,
+      },
+  },
+  {
+    key: "sensory",
+    title: "Sensory Processing",
+    icon: "hearing",
+    color: "warning",
+    route: "/sensory",
+    blurb: "Record your child's reaction to everyday noises and practise in the therapy room.",
+    result: (s) =>
+      s?.latest && {
+        flag: s.latest.final_prediction === "Hypersensitivity",
+        text: s.latest.final_prediction,
+        date: s.latest.createdAt,
+      },
+  },
+  {
+    key: "cognitive",
+    title: "Learning Abilities",
+    icon: "extension",
+    color: "primary",
+    route: "/learning",
+    blurb: "Memory, attention (with eye tracking) and logic games that build a cognitive profile.",
+    result: (s) =>
+      s?.latest && {
+        flag: s.latest.prediction === 1,
+        text: `Attention ${s.latest.levels?.attention} · Memory ${s.latest.levels?.memory} · Logic ${s.latest.levels?.logic}`,
+        date: s.latest.createdAt,
+      },
+  },
+];
 
-function Dashboard() {
-  const { sales, tasks } = reportsLineChartData;
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [summary, setSummary] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    api
+      .get("/dashboard/summary")
+      .then((r) => setSummary(r.data))
+      .catch((e) => setError(errorMessage(e)));
+  }, []);
+
+  const done = summary ? modules.filter((m) => summary[m.key]?.count > 0).length : 0;
+  const child = user?.child?.name;
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox py={3}>
+        <Card
+          sx={{ p: { xs: 2, md: 3 }, mb: 3, background: "linear-gradient(135deg,#1e3a8a,#0e7490)" }}
+        >
+          <Grid container alignItems="center" spacing={2}>
+            <Grid item xs={12} md={8}>
+              <MDTypography variant="h4" color="white">
+                Hello {user?.name?.split(" ")[0] || "there"} 👋
+              </MDTypography>
+              <MDTypography variant="body2" color="white" opacity={0.85}>
+                {child
+                  ? `Here is ${child}'s progress across the four NeuroFixia assessments.`
+                  : "Add your child's details in the profile, then work through the four assessments below - in any order."}
+              </MDTypography>
+            </Grid>
+            <Grid item xs={12} md={4} textAlign={{ xs: "left", md: "right" }}>
+              <MDTypography variant="h2" color="white">
+                {summary ? `${done}/4` : "–"}
+              </MDTypography>
+              <MDTypography variant="caption" color="white" opacity={0.85}>
+                assessments completed
+              </MDTypography>
+            </Grid>
+          </Grid>
+        </Card>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6} lg={3}>
-            <MDBox mb={1.5}>
-              <ComplexStatisticsCard
-                color="dark"
-                icon="weekend"
-                title="Bookings"
-                count={281}
-                percentage={{
-                  color: "success",
-                  amount: "+55%",
-                  label: "than lask week",
-                }}
-              />
-            </MDBox>
-          </Grid>
-          <Grid item xs={12} md={6} lg={3}>
-            <MDBox mb={1.5}>
-              <ComplexStatisticsCard
-                icon="leaderboard"
-                title="Today's Users"
-                count="2,300"
-                percentage={{
-                  color: "success",
-                  amount: "+3%",
-                  label: "than last month",
-                }}
-              />
-            </MDBox>
-          </Grid>
-          <Grid item xs={12} md={6} lg={3}>
-            <MDBox mb={1.5}>
-              <ComplexStatisticsCard
-                color="success"
-                icon="store"
-                title="Revenue"
-                count="34k"
-                percentage={{
-                  color: "success",
-                  amount: "+1%",
-                  label: "than yesterday",
-                }}
-              />
-            </MDBox>
-          </Grid>
-          <Grid item xs={12} md={6} lg={3}>
-            <MDBox mb={1.5}>
-              <ComplexStatisticsCard
-                color="primary"
-                icon="person_add"
-                title="Followers"
-                count="+91"
-                percentage={{
-                  color: "success",
-                  amount: "",
-                  label: "Just updated",
-                }}
-              />
-            </MDBox>
-          </Grid>
+          {modules.map((m) => {
+            const s = summary?.[m.key];
+            const r = m.result(s);
+            return (
+              <Grid item xs={12} md={6} key={m.key}>
+                <Card sx={{ height: "100%", p: 2.5, display: "flex", flexDirection: "column" }}>
+                  <MDBox display="flex" alignItems="center" mb={1.5}>
+                    <MDBox
+                      variant="gradient"
+                      bgColor={m.color}
+                      coloredShadow={m.color}
+                      borderRadius="lg"
+                      width="3rem"
+                      height="3rem"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      mr={1.5}
+                    >
+                      <Icon sx={{ color: "#fff" }}>{m.icon}</Icon>
+                    </MDBox>
+                    <MDBox flexGrow={1}>
+                      <MDTypography variant="h6">{m.title}</MDTypography>
+                      <MDTypography variant="caption" color="text">
+                        {s ? `${s.count} assessment${s.count === 1 ? "" : "s"} recorded` : " "}
+                      </MDTypography>
+                    </MDBox>
+                  </MDBox>
+                  <MDTypography variant="button" color="text" fontWeight="regular" mb={2}>
+                    {m.blurb}
+                  </MDTypography>
+                  <MDBox mt="auto">
+                    {!summary ? (
+                      <Skeleton height={32} />
+                    ) : r ? (
+                      <MDBox display="flex" alignItems="center" flexWrap="wrap" gap={1} mb={1.5}>
+                        <Chip
+                          size="small"
+                          color={r.flag ? "warning" : "success"}
+                          label={r.flag ? "Needs attention" : "On track"}
+                        />
+                        <MDTypography variant="caption" fontWeight="medium">
+                          {r.text}
+                        </MDTypography>
+                        <MDTypography variant="caption" color="text">
+                          · {fmtDate(r.date)}
+                        </MDTypography>
+                      </MDBox>
+                    ) : (
+                      <MDTypography variant="caption" color="text" display="block" mb={1.5}>
+                        Not started yet
+                      </MDTypography>
+                    )}
+                    <MDButton
+                      variant="gradient"
+                      color={m.color}
+                      size="small"
+                      onClick={() => navigate(m.route)}
+                    >
+                      {r ? "Open" : "Start"} <Icon sx={{ ml: 0.5 }}>arrow_forward</Icon>
+                    </MDButton>
+                  </MDBox>
+                </Card>
+              </Grid>
+            );
+          })}
         </Grid>
-        <MDBox mt={4.5}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={4}>
-              <MDBox mb={3}>
-                <ReportsBarChart
-                  color="info"
-                  title="website views"
-                  description="Last Campaign Performance"
-                  date="campaign sent 2 days ago"
-                  chart={reportsBarChartData}
-                />
-              </MDBox>
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <MDBox mb={3}>
-                <ReportsLineChart
-                  color="success"
-                  title="daily sales"
-                  description={
-                    <>
-                      (<strong>+15%</strong>) increase in today sales.
-                    </>
-                  }
-                  date="updated 4 min ago"
-                  chart={sales}
-                />
-              </MDBox>
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <MDBox mb={3}>
-                <ReportsLineChart
-                  color="dark"
-                  title="completed tasks"
-                  description="Last Campaign Performance"
-                  date="just updated"
-                  chart={tasks}
-                />
-              </MDBox>
-            </Grid>
-          </Grid>
-        </MDBox>
-        <MDBox>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={8}>
-              <Projects />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <OrdersOverview />
-            </Grid>
-          </Grid>
-        </MDBox>
+        <Disclaimer />
       </MDBox>
-      <Footer />
     </DashboardLayout>
   );
 }
-
-export default Dashboard;

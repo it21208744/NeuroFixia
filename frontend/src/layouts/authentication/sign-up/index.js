@@ -1,196 +1,132 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
-// react-router-dom components
-import { Link } from "react-router-dom";
-
-// @mui material components
-import Card from "@mui/material/Card";
-import Checkbox from "@mui/material/Checkbox";
-
-// React hooks
 import { useState } from "react";
-
-// Material Dashboard 2 React components
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import Alert from "@mui/material/Alert";
+import Checkbox from "@mui/material/Checkbox";
+import CircularProgress from "@mui/material/CircularProgress";
 import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
-import MDSnackbar from "components/MDSnackbar";
+import MDTypography from "components/MDTypography";
+import AuthLayout from "layouts/authentication/components/AuthLayout";
+import { useAuth } from "context/AuthContext";
+import { errorMessage } from "api/client";
 
-// Authentication layout components
-import CoverLayout from "layouts/authentication/components/CoverLayout";
+export default function SignUp() {
+  const { user, register } = useAuth();
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
+  const [agree, setAgree] = useState(false);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-// Images
-import bgImage from "assets/images/bg-sign-up-cover.jpeg";
-import { registerUser } from "api/auth";
+  if (user && !busy) return <Navigate to="/dashboard" replace />;
+  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
-function Cover() {
-  // State for form inputs
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [currentTime, setCurrentTime] = useState("");
-  const [errMsg, setErrMsg] = useState("");
-  const [err, setErr] = useState(false);
-  const [successSB, setSuccessSB] = useState(false);
-
-  function getCurrentTime() {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, "0");
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const seconds = now.getSeconds().toString().padStart(2, "0");
-
-    return `${hours}:${minutes}:${seconds}`;
-  }
-
-  // Handle form submission
-  const handleSignUp = () => {
-    registerUser({ name, email, password })
-      .then((res) => {
-        setCurrentTime(getCurrentTime);
-        if (res.status == "201") {
-          setErr(false);
-          return openSuccessSB();
-        }
-        setErr(true);
-        setErrMsg(res.response.data.message);
-        openSuccessSB();
-      })
-      .catch((err) => {
-        setErr(true);
-        setErrMsg(err.response.data.message);
-      });
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (form.password.length < 6) return setError("Password must be at least 6 characters long");
+    if (form.password !== form.confirm) return setError("Passwords do not match");
+    setBusy(true);
+    try {
+      await register(form.name.trim(), form.email.trim(), form.password);
+      navigate("/profile?welcome=1", { replace: true });
+    } catch (err) {
+      setError(errorMessage(err, "Registration failed"));
+      setBusy(false);
+    }
+    return null;
   };
-  const openSuccessSB = () => setSuccessSB(true);
-  const closeSuccessSB = () => setSuccessSB(false);
-
-  const renderSuccessSB = (
-    <MDSnackbar
-      color={err != true ? "success" : "error"}
-      icon="check"
-      title={err != true ? "Success" : "Error"}
-      content={err != true ? "User registered" : errMsg}
-      dateTime={currentTime}
-      open={successSB}
-      onClose={closeSuccessSB}
-      close={closeSuccessSB}
-      bgWhite
-    />
-  );
 
   return (
-    <CoverLayout image={bgImage}>
-      <Card>
-        <MDBox
+    <AuthLayout
+      title="Create your account"
+      subtitle="One parent account keeps all your child's results together"
+    >
+      <MDBox component="form" onSubmit={submit} noValidate>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2, fontSize: "0.875rem" }}>
+            {error}
+          </Alert>
+        )}
+        <MDBox mb={2}>
+          <MDInput
+            label="Your name"
+            fullWidth
+            value={form.name}
+            onChange={set("name")}
+            autoComplete="name"
+            required
+          />
+        </MDBox>
+        <MDBox mb={2}>
+          <MDInput
+            type="email"
+            label="Email"
+            fullWidth
+            value={form.email}
+            onChange={set("email")}
+            autoComplete="email"
+            required
+          />
+        </MDBox>
+        <MDBox mb={2}>
+          <MDInput
+            type="password"
+            label="Password (min 6 characters)"
+            fullWidth
+            value={form.password}
+            onChange={set("password")}
+            autoComplete="new-password"
+            required
+          />
+        </MDBox>
+        <MDBox mb={1}>
+          <MDInput
+            type="password"
+            label="Confirm password"
+            fullWidth
+            value={form.confirm}
+            onChange={set("confirm")}
+            autoComplete="new-password"
+            required
+          />
+        </MDBox>
+        <MDBox display="flex" alignItems="center" ml={-1} mb={2}>
+          <Checkbox checked={agree} onChange={(e) => setAgree(e.target.checked)} />
+          <MDTypography
+            variant="button"
+            color="text"
+            fontWeight="regular"
+            sx={{ cursor: "pointer" }}
+            onClick={() => setAgree(!agree)}
+          >
+            I understand NeuroFixia is a screening aid and not a medical diagnosis
+          </MDTypography>
+        </MDBox>
+        <MDButton
+          type="submit"
           variant="gradient"
-          bgColor="info"
-          borderRadius="lg"
-          coloredShadow="success"
-          mx={2}
-          mt={-3}
-          p={3}
-          mb={1}
-          textAlign="center"
+          color="info"
+          fullWidth
+          disabled={busy || !agree || !form.name || !form.email || !form.password}
         >
-          <MDTypography variant="h4" fontWeight="medium" color="white" mt={1}>
-            Join us today
+          {busy ? <CircularProgress size={18} color="inherit" /> : "Create account"}
+        </MDButton>
+        <MDTypography variant="button" color="text" display="block" textAlign="center" mt={3}>
+          Already have an account?{" "}
+          <MDTypography
+            component={Link}
+            to="/authentication/sign-in"
+            variant="button"
+            color="info"
+            fontWeight="medium"
+            textGradient
+          >
+            Sign in
           </MDTypography>
-          <MDTypography display="block" variant="button" color="white" my={1}>
-            Enter your email and password to register
-          </MDTypography>
-        </MDBox>
-        <MDBox pt={4} pb={3} px={3}>
-          <MDBox component="form" role="form">
-            <MDBox mb={2}>
-              <MDInput
-                type="text"
-                label="Name"
-                variant="standard"
-                fullWidth
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </MDBox>
-            <MDBox mb={2}>
-              <MDInput
-                type="email"
-                label="Email"
-                variant="standard"
-                fullWidth
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </MDBox>
-            <MDBox mb={2}>
-              <MDInput
-                type="password"
-                label="Password"
-                variant="standard"
-                fullWidth
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </MDBox>
-            <MDBox display="flex" alignItems="center" ml={-1}>
-              <Checkbox />
-              <MDTypography
-                variant="button"
-                fontWeight="regular"
-                color="text"
-                sx={{ cursor: "pointer", userSelect: "none", ml: -1 }}
-              >
-                &nbsp;&nbsp;I agree the&nbsp;
-              </MDTypography>
-              <MDTypography
-                component="a"
-                href="#"
-                variant="button"
-                fontWeight="bold"
-                color="info"
-                textGradient
-              >
-                Terms and Conditions
-              </MDTypography>
-            </MDBox>
-            <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth onClick={handleSignUp}>
-                sign up
-              </MDButton>
-              {renderSuccessSB}
-            </MDBox>
-            <MDBox mt={3} mb={1} textAlign="center">
-              <MDTypography variant="button" color="text">
-                Already have an account?{" "}
-                <MDTypography
-                  component={Link}
-                  to="/authentication/sign-in"
-                  variant="button"
-                  color="info"
-                  fontWeight="medium"
-                  textGradient
-                >
-                  Sign In
-                </MDTypography>
-              </MDTypography>
-            </MDBox>
-          </MDBox>
-        </MDBox>
-      </Card>
-    </CoverLayout>
+        </MDTypography>
+      </MDBox>
+    </AuthLayout>
   );
 }
-
-export default Cover;

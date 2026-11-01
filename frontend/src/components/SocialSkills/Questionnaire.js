@@ -1,397 +1,194 @@
-import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
-import { useNavigate, useParams } from "react-router-dom";
+import { useContext, useEffect, useRef, useState } from "react";
+import Card from "@mui/material/Card";
+import Grid from "@mui/material/Grid";
+import TextField from "@mui/material/TextField";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Alert from "@mui/material/Alert";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import LinearProgress from "@mui/material/LinearProgress";
+import Icon from "@mui/material/Icon";
+import MDBox from "components/MDBox";
+import MDTypography from "components/MDTypography";
+import MDButton from "components/MDButton";
 import { LangContext } from "layouts/Social";
+import api, { errorMessage } from "api/client";
+import T, { LANGS } from "./translations";
 
-import downloadImg from "./images/sback.jpg";
+// Bug fix: `new SpeechRecognition()` ran at import time and threw in Firefox/Safari, which
+// crashed the *whole* app at start-up because routes.js imports every page.
+const SpeechRecognition =
+  typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
-// Voice recognition setup
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognition = new SpeechRecognition();
-recognition.interimResults = false;
+const YN = ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8"];
+const TEXT = ["q9", "q10"];
 
 export default function Questionnaire() {
-  const { setValue, lang } = useContext(LangContext); // 👈 Use context to change tabs
-  console.log("Language is", lang);
-  const [q1, setQ1] = useState("");
-  const [q2, setQ2] = useState("");
-  const [q3, setQ3] = useState("");
-  const [q4, setQ4] = useState("");
-  const [q5, setQ5] = useState("");
-  const [q6, setQ6] = useState("");
-  const [q7, setQ7] = useState("");
-  const [q8, setQ8] = useState("");
-  const [q9, setQ9] = useState("");
-  const [q10, setQ10] = useState("");
-
+  const { setValue, lang } = useContext(LangContext);
+  const t = T[lang] || T.english;
+  // Answers are stored as canonical "yes"/"no" (not the translated label), so the model never
+  // depends on online translation of "ඔව්"/"ஆம்".
+  const [ans, setAns] = useState({});
   const [listening, setListening] = useState(null);
-  const [result, setResult] = useState(""); // State to store the risk prediction result
-  const [showPopup, setShowPopup] = useState(false); // State to control result popup visibility
-  const [isLoading, setIsLoading] = useState(false); // State to track loading state
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState(null);
+  const recRef = useRef(null);
 
-  //   const { lang } = useParams();
-  const [translatedLabels, setTranslatedLabels] = useState({});
-  const navigate = useNavigate();
+  useEffect(() => () => recRef.current?.abort?.(), []);
 
-  // Translations
-  useEffect(() => {
-    const translations = {
-      english: {
-        title: "Evaluation Form",
-        q1: "1. Does your child point to indicate that s/he wants something? (e.g. a toy that is out of reach) ?",
-        q2: "2. If you or someone else in the family is visibly upset, does your child show signs of wanting to comfort them? (e.g. stroking hair, hugging them)?",
-        q3: "3. Does your child let you know when he/she is hungry, thirsty, or wants something specfic?",
-        q4: "4. Can your child understand simple instructions given, such as 'Give the book to Amma' or 'Bring your slippers'?",
-        q5: "5. Does your child follow where you are looking?",
-        q6: "6. Does your child like to play with other children?",
-        q7: "7. Does your child behave well in crowded places like markets, bus stands, or festivals?",
-        q8: "8. Does your child use simple gestures? (e.g. wave goodbye) ",
-        q9: "9. Describe in detail how your child reacts when you call their name.",
-        q10: "10. How does your child make eye contacts during conversations ?",
-        yes: "Yes",
-        no: "No",
-        speak: "🔊 Use your voice",
-        submit: "Submit",
-        resultMessage: "Risk Prediction:",
-        close: "Close",
-        waiting: "Waiting for result...",
-      },
-      sinhala: {
-        title: "ප්‍රශ්නාවලි පෝරමය",
-        q1: "1. ඔබේ දරුවා යමක් අවශ්‍ය බව පෙන්වීමට ඒ දෙසට අත දිගු කරනවාද? (උදා: ළඟා විය නොහැකි සෙල්ලම් බඩුවක්)?",
-        q2: "2. ඔබ හෝ පවුලේ වෙනත් අයෙකු කලබල වී හෝ දුකට පත්වී ඇත්නම්, ඔබේ දරුවා ඔවුන්ව සනසාලීමට කැමති බවට සලකුණු පෙන්වනවාද?",
-        q3: "3. ඔබේ දරුවා ඔහුට/ඇයට බඩගිනි, පිපාසය, හෝ නිශ්චිත  යමක් අවශ්‍ය වූ විට  ඔබට දන්වනවාද?",
-        q4: "4. 'අම්මාට පොත දෙන්න' හෝ 'ඔබේ සෙරෙප්පු රැගෙන එන්න' වැනි සරල උපදෙස් ඔබේ දරුවාට තේරුම් ගත හැකිද?",
-        q5: "5. ඔබේ දරුවා ඔබ බලන දෙස අවදානය යොමු කරනවාද?",
-        q6: "6. ඔබේ දරුවා අනෙක් දරුවන් සමඟ එක්වී සෙල්ලම් කිරීමට කැමතිද?",
-        q7: "7. වෙළඳපොළවල්, බස් නැවතුම්පොළවල් හෝ උත්සව වැනි ජනාකීර්ණ ස්ථානවල ඔබේ දරුවා හොඳින් හැසිරෙනවාද?",
-        q8: "8. ඔබේ දරුවා සරල අභිනයන් භාවිතා කරනවාද? (උදා: අත වනමින් සමුගැනීම)?",
-        q9: "9. ඔබ ඔබේ දරුවාගේ නම අමතන විට ඔහු ප්‍රතිචාර දක්වන ආකාරය විස්තර කරන්න.",
-        q10: "10. සංවාද අතරතුර ඔබේ දරුවා ඇස් සබදතාවය පවත්වා ගන්නේ කෙසේද?",
-        yes: "ඔව්",
-        no: "නැත",
-        speak: "🔊 හඬ භාවිතය",
-        submit: "ඉදිරියට යන්න",
-        resultMessage: "අවදානම් අනාවැකිය:",
-        close: "වසන්න",
-        waiting: "ප්‍රතිඵලය ලබා ගැනීමට රැඳී සිටින්න...",
-      },
-      tamil: {
-        title: "குழந்தை தனித்துவம் மதிப்பீடு",
-        q1: "1. குடும்ப உறுப்பினர்கள் அல்லது பார்வையாளர்களுடனான உரையாடல்கள் அல்லது தொடர்புகளின் போது உங்கள் குழந்தை கண் தொடர்பு கொள்கிறதா?",
-        q2: "2. அரைக்கும் இயந்திரங்கள் அல்லது கோவில்/தேவாலய மணி போன்ற பொதுவான வீட்டுச் சத்தங்களுக்கு உங்கள் குழந்தை பயப்படுகிறதா அல்லது கடுமையாக எதிர்வினையாற்றுகிறதா?",
-        q3: "3. உங்கள் குழந்தை மற்ற குழந்தைகளுடன் சேர்ந்து விளையாடுவதை விட தனியாக விளையாடுவதை விரும்புகிறதா?",
-        q4: "4. டிவி உரையாடல்கள் அல்லது பாடல்கள் போன்ற சூழலுக்கு அப்பாற்பட்ட வார்த்தைகள் அல்லது சொற்றொடர்களை உங்கள் குழந்தை மீண்டும் சொல்கிறாரா?",
-        q5: "5. 'புத்தகத்தை அம்மாவிடம் கொடு' அல்லது 'உங்கள் செருப்புகளைக் கொண்டு வாருங்கள்' போன்ற எளிய வழிமுறைகளை உங்கள் குழந்தை புரிந்துகொள்ள முடியுமா?",
-        q6: "6. உணவின் போது அல்லது விளையாடும் போது உங்கள் குழந்தை உங்கள் பெயரைச் சொல்லி அழைக்கும் போது அவர் எவ்வாறு பதிலளிப்பார்?",
-        q7: "7. சந்தைகள், பேருந்து நிலையங்கள் அல்லது திருவிழாக்கள் போன்ற நெரிசலான இடங்களில் உங்கள் குழந்தை எப்படி நடந்து கொள்கிறது?",
-        q8: "8. உங்கள் பிள்ளை பசியாக இருக்கும்போது, ​​தாகமாக இருக்கும்போது அல்லது குறிப்பிட்ட ஒன்றை விரும்பும்போது எப்படி உங்களுக்குத் தெரியப்படுத்துவார்?",
-        q9: "9. உங்கள் பிள்ளை பொம்மைகள் அல்லது வீட்டுப் பொருட்கள் போன்ற பொருட்களை வைத்து விளையாடும்போது பொதுவாக என்ன செய்வார்?",
-        q10: "10. வீட்டில் புதிய அல்லது அறிமுகமில்லாத ஒன்றை செய்யும்படி கேட்கப்படும் போது உங்கள் குழந்தை எவ்வாறு பதிலளிக்கிறார்?",
-        yes: "ஆம்",
-        no: "இல்லை",
-        speak: "🔊 குரல் பயன்படுத்த",
-        submit: "சமர்ப்பிக்கவும்",
-        resultMessage: "அபாயம் கணிப்பு:",
-        close: "மூடு",
-        waiting: "முடிவுக்காக காத்திருக்கிறது...",
-      },
+  const listen = (field) => {
+    if (!SpeechRecognition) {
+      setError(
+        "Voice input is not supported in this browser - please type the answer (Chrome or Edge support voice)."
+      );
+      return;
+    }
+    recRef.current?.abort?.();
+    const rec = new SpeechRecognition();
+    rec.lang = LANGS[lang]?.speech || "en-US";
+    rec.interimResults = false;
+    rec.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      setAns((a) => ({ ...a, [field]: a[field] ? `${a[field]} ${text}` : text }));
     };
-    if (translations[lang]) {
-      setTranslatedLabels(translations[lang]);
-      document.title = translations[lang].title;
-    } else {
-      console.warn(`Unsupported language code: ${lang}`);
-      setTranslatedLabels(translations["english"]); // fallback
-      document.title = "Autism Risk Assessment";
-    }
-  }, [lang]);
-
-  // Speech recognition
-  function startListening(field) {
+    rec.onerror = (e) =>
+      setError(
+        e.error === "not-allowed"
+          ? "Microphone permission denied."
+          : `Voice input error: ${e.error}`
+      );
+    rec.onend = () => setListening(null);
+    recRef.current = rec;
     setListening(field);
-
-    // Set the language based on the selected language
-    if (lang === "sinhala") recognition.lang = "si-LK";
-    else if (lang === "tamil") recognition.lang = "ta-LK";
-    else recognition.lang = "en-US";
-
-    // Try to start recognition and catch errors if recognition has already started
-    try {
-      recognition.start();
-    } catch (error) {
-      if (error instanceof DOMException && error.code === DOMException.INVALID_STATE_ERR) {
-        console.log("Recording already started.");
-        // Optionally, show an alert or message on the UI
-        alert("Speech Recognition already started.");
-      } else {
-        console.error("An error occurred: ", error);
-      }
-    }
-  }
-
-  recognition.onresult = (event) => {
-    const spokenText = event.results[0][0].transcript;
-
-    if (listening === "q6") setQ6(spokenText);
-    if (listening === "q7") setQ7(spokenText);
-    if (listening === "q8") setQ8(spokenText);
-    if (listening === "q9") setQ9(spokenText);
-    if (listening === "q10") setQ10(spokenText);
-
-    setListening(null);
+    rec.start();
   };
 
-  recognition.onspeechend = () => recognition.stop();
+  const complete = YN.every((q) => ans[q]) && TEXT.every((q) => (ans[q] || "").trim().length > 2);
+  const answered =
+    YN.filter((q) => ans[q]).length + TEXT.filter((q) => (ans[q] || "").trim()).length;
 
-  // Submit form
-  async function handleSubmit(e) {
-    e.preventDefault();
-
-    const newSales = { q1, q2, q3, q4, q5, q6, q7, q8, q9, q10 };
-
-    setIsLoading(true); // Set loading state to true
-
+  const submit = async () => {
+    setBusy(true);
+    setError("");
     try {
-      // Send data to Express.js for analysis and saving
-      const response = await axios.post("http://localhost:8070/Sroute/analyze", newSales);
-      const riskPrediction = response.data.risk_prediction;
-
-      // Set the result state with the translated message and show the popup
-      if (lang === "sinhala") {
-        setResult(
-          riskPrediction === 1
-            ? "දරුවාට ඔටිසම් රෝගයට සම්බන්ධ සමාජ කුසලතා දුෂ්කරතා තිබේ, වැඩිදියුණු කිරීමේ ක්‍රියාකාරකම් පරීක්ෂා කරන්න"
-            : "අවදානමක් නැත"
-        );
-      } else if (lang === "tamil") {
-        setResult(riskPrediction === 1 ? "ஆபத்து கண்டறியப்பட்டது" : "ஆபத்து கண்டறியப்படவில்லை");
-      } else {
-        setResult(
-          riskPrediction === 1
-            ? "Your child has social skills difficulties related to autism, Checkout improvement activities"
-            : "No Risk Detected for your child"
-        );
-      }
-
-      setShowPopup(true); // Show the result popup
-    } catch (err) {
-      alert("Error submitting the form: " + err.message);
+      const { data } = await api.post("/social/analyze", { ...ans, lang });
+      setResult(data);
+    } catch (e) {
+      setError(errorMessage(e));
     } finally {
-      setIsLoading(false); // Reset loading state
+      setBusy(false);
     }
-  }
-
-  // Close the popup
-  const closePopup = () => {
-    setShowPopup(false);
-    setValue("three");
-  };
-
-  // Styles
-  const containerStyle = {
-    padding: "20px",
-    backgroundColor: "#E8EFF4",
-    overflow: "hidden",
-    boxShadow: "0 2px 20px",
-    borderRadius: "$radius",
-    transition: "transform 200ms ease-in",
-    padding: "20px",
-    backdropFilter: "blur(50px)",
-    maxWidth: "1000px",
-    margin: "0 auto",
-    marginTop: "50px",
-    flexDirection: "column",
-    alignItems: "center",
-  };
-  const labelStyle = {
-    marginBottom: "8px",
-    display: "block",
-    color: "#1C325B",
-    fontWeight: "500",
-    fontFamily: "Rubik, sans-serif",
-    fontStyle: "normal",
-    // fontWeight: "700",
-    fontSize: "20px",
-  };
-  const inputStyle = {
-    width: "100%",
-    marginBottom: "15px",
-    padding: "12px",
-    border: "1px solid #ccc",
-    borderRadius: "5px",
-    fontSize: "16px",
-    boxSizing: "border-box",
-  };
-  const buttonStyle = {
-    backgroundImage: "linear-gradient(125deg,#1C325B,#4A628A)",
-    color: "#fff",
-    padding: "12px 40px",
-    borderRadius: "5px",
-    border: "none",
-    cursor: "pointer",
-    fontSize: "16px",
-    width: "20%",
-    marginTop: "15px",
-    marginLeft: "auto",
-    //display: "block",
-    textAlign: "center",
-    display: "flex", // Ensure flexbox is used
-    justifyContent: "center", // Horizontally center text
-    alignItems: "center", // Vertically center text
-  };
-  const buttonStylee = {
-    backgroundImage: "linear-gradient(125deg,#1C325B,#4A628A)",
-    color: "#fff",
-    padding: "12px 40px",
-    borderRadius: "5px",
-    border: "none",
-    cursor: "pointer",
-    fontSize: "16px",
-    width: "20%",
-    marginTop: "15px",
-    marginLeft: "200px",
-    //display: "block",
-    textAlign: "left",
-    display: "flex", // Ensure flexbox is used
-    justifyContent: "center", // Horizontally center text
-    alignItems: "center", // Vertically center text
-  };
-  const speakButtonStyle = {
-    backgroundColor: "transparent",
-    padding: "10px 20px",
-    borderRadius: "5px",
-    border: "none",
-    cursor: "pointer",
-    fontSize: "16px",
-    marginTop: "10px",
-    outline: "none",
-    boxShadow: "none",
-  };
-
-  // Define lastFieldStyle
-  const lastFieldStyle = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",
-    width: "100%",
-    marginBottom: "20px",
-  };
-
-  // Popup styles
-  const popupStyle = {
-    position: "fixed",
-    top: "50%",
-    //left: "40%",
-    marginLeft: "600px",
-    transform: "translate(-50%, -50%)",
-    backgroundColor: "#fff",
-    padding: "40px",
-    borderRadius: "10px",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-    zIndex: 1000,
-    textAlign: "center",
-  };
-  const overlayStyle = {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    //marginLeft: "980px",
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    zIndex: 999,
   };
 
   return (
-    <>
-      <div
-      // style={{
-      //   backgroundImage: `url(${downloadImg})`,
-      //   backgroundRepeat: "no-repeat",
-      //   backgroundSize: "cover",
-      //   width: "100vw",
-      //   height: "300vh",
-      // }}
-      >
-        <h3
-          style={{
-            textAlign: "center",
-            fontFamily: "Playfair Display, serif",
-            fontStyle: "normal",
-            fontWeight: "bold",
-            fontSize: "28px",
-          }}
-        >
-          {translatedLabels.title}
-        </h3>
-        <form onSubmit={handleSubmit} style={containerStyle}>
-          {[...Array(8).keys()].map((i) => (
-            <div key={i} style={{ width: "100%" }}>
-              <label style={labelStyle}>{translatedLabels[`q${i + 1}`]}</label>
-              <select
-                required
-                value={eval(`q${i + 1}`)}
-                onChange={(e) => eval(`setQ${i + 1}(e.target.value)`)}
-                style={inputStyle}
-              >
-                <option value="">
-                  {translatedLabels.yes}/{translatedLabels.no}
-                </option>
-                <option value={translatedLabels.yes}>{translatedLabels.yes}</option>
-                <option value={translatedLabels.no}>{translatedLabels.no}</option>
-              </select>
-            </div>
-          ))}
+    <Card sx={{ p: { xs: 2, md: 4 } }}>
+      <MDTypography variant="h4">{t.title}</MDTypography>
+      <MDTypography variant="body2" color="text" mb={2}>
+        {t.intro}
+      </MDTypography>
+      <LinearProgress
+        variant="determinate"
+        value={(answered / 10) * 100}
+        sx={{ mb: 3, height: 6 }}
+      />
 
-          {[...Array(2).keys()].map((i) => (
-            <div key={i + 8} style={lastFieldStyle}>
-              <label style={labelStyle}>{translatedLabels[`q${i + 9}`]}</label>
-              <textarea
-                required
-                value={eval(`q${i + 9}`)}
-                onChange={(e) => eval(`setQ${i + 9}(e.target.value)`)}
-                style={inputStyle}
-                rows="2"
+      {YN.map((q, i) => (
+        <MDBox key={q} mb={2.5} pb={2} sx={{ borderBottom: "1px solid #eee" }}>
+          <MDTypography variant="button" fontWeight="medium" display="block" mb={1}>
+            {i + 1}. {t[q]}
+          </MDTypography>
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={ans[q] || null}
+            onChange={(e, v) => v && setAns({ ...ans, [q]: v })}
+          >
+            <ToggleButton value="yes" sx={{ px: 3 }} color="success">
+              {t.yes}
+            </ToggleButton>
+            <ToggleButton value="no" sx={{ px: 3 }} color="error">
+              {t.no}
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </MDBox>
+      ))}
+
+      {TEXT.map((q, i) => (
+        <MDBox key={q} mb={2.5}>
+          <MDTypography variant="button" fontWeight="medium" display="block" mb={1}>
+            {i + 9}. {t[q]}
+          </MDTypography>
+          <Grid container spacing={1} alignItems="center">
+            <Grid item xs={12} sm>
+              <TextField
+                fullWidth
+                multiline
+                minRows={2}
+                placeholder={t.placeholder}
+                value={ans[q] || ""}
+                onChange={(e) => setAns({ ...ans, [q]: e.target.value })}
               />
-              <button
-                type="button"
-                onClick={() => startListening(`q${i + 9}`)}
-                style={speakButtonStyle}
+            </Grid>
+            <Grid item>
+              <MDButton
+                variant={listening === q ? "gradient" : "outlined"}
+                color="info"
+                size="small"
+                onClick={() => listen(q)}
               >
-                {translatedLabels.speak}
-              </button>
-            </div>
-          ))}
-          <button type="submit" style={buttonStyle} disabled={isLoading}>
-            {translatedLabels.submit}
-          </button>
-        </form>
+                <Icon sx={{ mr: 0.5 }}>{listening === q ? "graphic_eq" : "mic"}</Icon>
+                {listening === q ? t.listening : t.speak}
+              </MDButton>
+            </Grid>
+          </Grid>
+        </MDBox>
+      ))}
 
-        {/* Loading Popup */}
-        {isLoading && (
-          <>
-            <div style={overlayStyle}></div>
-            <div style={popupStyle}>
-              <h3>{translatedLabels.waiting}</h3>
-            </div>
-          </>
-        )}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      {busy && <LinearProgress sx={{ mb: 1 }} />}
+      <MDBox display="flex" justifyContent="space-between" alignItems="center">
+        <MDButton variant="text" color="secondary" onClick={() => setValue("one")}>
+          Back
+        </MDButton>
+        <MDButton variant="gradient" color="success" onClick={submit} disabled={!complete || busy}>
+          {busy ? t.waiting : t.submit}
+        </MDButton>
+      </MDBox>
 
-        {/* Result Popup */}
-        {showPopup && (
-          <>
-            <div style={overlayStyle} onClick={closePopup}></div>
-            <div style={popupStyle}>
-              <h3>{translatedLabels.resultMessage}</h3>
-              <p>{result}</p>
-              <button onClick={closePopup} style={buttonStylee}>
-                {translatedLabels.close}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </>
+      <Dialog open={!!result} onClose={() => setValue("five")} maxWidth="sm" fullWidth>
+        <DialogContent>
+          {result && (
+            <MDBox textAlign="center" py={2}>
+              <MDTypography variant="h1">{result.risk_prediction === 1 ? "⚠️" : "✅"}</MDTypography>
+              <MDTypography variant="h5" mb={1}>
+                {result.risk_prediction === 1 ? t.risk : t.noRisk}
+              </MDTypography>
+              {result.risk_prediction === 1 && result.top_3_features?.length > 0 && (
+                <MDTypography variant="body2" color="text">
+                  Focus areas: {result.top_3_features.map((f) => f.label).join(", ")}
+                </MDTypography>
+              )}
+            </MDBox>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <MDButton variant="text" color="info" onClick={() => setValue("five")}>
+            View progress
+          </MDButton>
+          {result?.risk_prediction === 1 && (
+            <MDButton variant="gradient" color="success" onClick={() => setValue("four")}>
+              Improvement activity
+            </MDButton>
+          )}
+        </DialogActions>
+      </Dialog>
+    </Card>
   );
 }

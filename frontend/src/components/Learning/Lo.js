@@ -193,15 +193,22 @@ const patterns = [
 ];
 
 const Lo = () => {
-  const webgazer = window.webgazer;
+  const { score, setScore, errors, setErrors, totalTime, setCompletionTimes, markDone } =
+    useContext(DataContext);
+  // Bug fixes: answers mutated the shared `patterns` array (so a second visit showed old answers),
+  // every option click on an already-answered pattern changed the score again, and the page
+  // called window.webgazer, which is no longer loaded globally.
+  const [answers, setAnswers] = useState({});
 
   useEffect(() => {
-    webgazer.showPredictionPoints(false);
-    console.log("resssff");
-    webgazer.pause();
-  });
-  const { score, setScore, errors, setErrors, totalTime, completionTimes, setCompletionTimes } =
-    useContext(DataContext);
+    setScore(0);
+    setErrors(0);
+    setCompletionTimes([]);
+  }, []);
+
+  useEffect(() => {
+    if (Object.keys(answers).length === patterns.length) markDone("logic");
+  }, [answers]);
 
   const [startTime, setStartTime] = useState(Date.now());
   const [feedbackIcons, setFeedbackIcons] = useState({});
@@ -211,23 +218,19 @@ const Lo = () => {
   const wrongAudio = new Audio(wrongSound);
 
   const handleDrop = (selected, patternId) => {
+    if (answers[patternId]) return;
     const pattern = patterns.find((p) => p.id === patternId);
     const isCorrect = selected === pattern.answer;
     const timeTaken = Math.floor((Date.now() - startTime) / 1000);
-
-    // For Patterns 1-5 and 6-11
-    const missingIndex = pattern.sequence.indexOf(null);
-    if (missingIndex !== -1) {
-      pattern.sequence[missingIndex] = selected;
-    }
+    setAnswers((a) => ({ ...a, [patternId]: selected }));
 
     if (isCorrect) {
-      correctAudio.play();
-      setScore(score + pattern.points);
+      correctAudio.play().catch(() => {});
+      setScore((s) => s + pattern.points);
       setFeedbackIcons((prev) => ({ ...prev, [patternId]: "correct.png" }));
     } else {
-      wrongAudio.play();
-      setErrors(errors + 1);
+      wrongAudio.play().catch(() => {});
+      setErrors((e) => e + 1);
       setFeedbackIcons((prev) => ({ ...prev, [patternId]: "wrong.png" }));
     }
 
@@ -258,15 +261,16 @@ const Lo = () => {
         <div key={pattern.id} className="pattern-container">
           <div className="question">{pattern.question}</div>
           <div className="sequence">
-            {pattern.sequence.map((img, index) =>
-              img ? (
+            {pattern.sequence.map((seqImg, index) => {
+              const img = seqImg || answers[pattern.id];
+              return img ? (
                 <img key={index} src={`/images/${img}`} alt="" className="pattern-img" />
               ) : (
                 <div key={index} className="missing-part">
-                  ---------------------?
+                  ?
                 </div>
-              )
-            )}
+              );
+            })}
           </div>
           <div className="options">
             {pattern.options.map((option, index) => (
@@ -275,6 +279,10 @@ const Lo = () => {
                 src={`/images/${option}`}
                 alt=""
                 className="option-img"
+                style={{
+                  opacity: answers[pattern.id] && answers[pattern.id] !== option ? 0.35 : 1,
+                  cursor: answers[pattern.id] ? "default" : "pointer",
+                }}
                 onClick={() => handleDrop(option, pattern.id)}
               />
             ))}

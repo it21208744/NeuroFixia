@@ -1,6 +1,6 @@
 // src/components/SessionHistory.js
 import React, { useEffect, useState, useRef } from "react";
-import axios from "axios";
+import api, { errorMessage } from "api/client";
 import {
   Card,
   CardContent,
@@ -24,10 +24,11 @@ import {
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
-const SessionHistory = ({ userId }) => {
+const SessionHistory = () => {
   const [sessions, setSessions] = useState([]);
   const [filteredSessions, setFilteredSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const contentRef = useRef();
@@ -35,24 +36,28 @@ const SessionHistory = ({ userId }) => {
   useEffect(() => {
     const fetchSessions = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/sessions/${userId}`);
-        const sorted = res.data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        const res = await api.get("/sensory/sessions");
+        // volume stored 0-1; show as % so it shares the axis with seconds
+        const sorted = res.data
+          .map((s) => ({ ...s, volumePct: Math.round(s.volume * 100) }))
+          .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         setSessions(sorted);
         setFilteredSessions(sorted);
       } catch (err) {
-        console.error("Error fetching sessions", err);
+        setError(errorMessage(err));
       } finally {
         setLoading(false);
       }
     };
 
     fetchSessions();
-  }, [userId]);
+  }, []);
 
   const filterByDateRange = () => {
     if (!startDate || !endDate) return;
     const start = new Date(startDate);
     const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999); // bug fix: sessions on the end date were excluded
     const filtered = sessions.filter((session) => {
       const sessionDate = new Date(session.timestamp);
       return sessionDate >= start && sessionDate <= end;
@@ -98,14 +103,26 @@ const SessionHistory = ({ userId }) => {
     );
   }
 
+  if (error) return <Typography color="error">{error}</Typography>;
+
+  if (!sessions.length)
+    return (
+      <Card sx={{ p: 3 }}>
+        <Typography variant="body2">
+          No therapy sessions yet. Use the Auditory Therapy room - each time you stop a sound, the
+          session is saved here.
+        </Typography>
+      </Card>
+    );
+
   return (
-    <Box p={3}>
-      <Typography variant="h4" align="center" gutterBottom>
+    <Card sx={{ p: { xs: 2, md: 3 } }}>
+      <Typography variant="h5" gutterBottom>
         Session History
       </Typography>
 
-      <Box display="flex" justifyContent="space-between" flexWrap="wrap" mb={2}>
-        <Box display="flex" gap={2}>
+      <Box display="flex" justifyContent="space-between" flexWrap="wrap" gap={2} mb={2}>
+        <Box display="flex" gap={2} flexWrap="wrap">
           <TextField
             type="date"
             label="Start Date"
@@ -133,6 +150,9 @@ const SessionHistory = ({ userId }) => {
             onClick={filterByDateRange}
           >
             Filter
+          </Button>
+          <Button variant="text" onClick={() => setFilteredSessions(sessions)}>
+            Clear
           </Button>
         </Box>
         <Box display="flex" gap={2}>
@@ -171,7 +191,7 @@ const SessionHistory = ({ userId }) => {
         {Object.entries(sessionsBySound).map(([sound, sessions], index) => (
           <Box key={index} mb={6}>
             <Typography variant="h5" gutterBottom>
-              Sound: {sound}
+              {sound.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase())}
             </Typography>
 
             <Box mb={2} mt={1}>
@@ -185,8 +205,8 @@ const SessionHistory = ({ userId }) => {
                   <YAxis />
                   <Tooltip labelFormatter={(label) => new Date(label).toLocaleString()} />
                   <Legend />
-                  <Line type="monotone" dataKey="volume" name="Volume" stroke="#1976d2" />
-                  <Line type="monotone" dataKey="duration" name="Duration" stroke="#2e7d32" />
+                  <Line type="monotone" dataKey="volumePct" name="Volume (%)" stroke="#1976d2" />
+                  <Line type="monotone" dataKey="duration" name="Tolerated (s)" stroke="#2e7d32" />
                 </LineChart>
               </ResponsiveContainer>
             </Box>
@@ -210,7 +230,7 @@ const SessionHistory = ({ userId }) => {
           </Box>
         ))}
       </div>
-    </Box>
+    </Card>
   );
 };
 

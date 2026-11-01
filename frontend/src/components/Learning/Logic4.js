@@ -178,7 +178,7 @@ const Logic4 = () => {
           gridTemplateColumns: `repeat(${numCols}, 95px)`,
           gridGap: "4px",
           marginBottom: "16px",
-          marginLeft: "360px",
+          marginInline: "auto",
         }}
       >
         {mazeLayout.map((rowArr, row) => rowArr.map((_, col) => renderCell(row, col)))}
@@ -188,7 +188,7 @@ const Logic4 = () => {
         <button
           onClick={() => handleMove("up")}
           className="p-2 rounded bg-yellow-200"
-          style={{ fontSize: "40px", marginRight: "20px", marginLeft: "470px" }}
+          style={{ fontSize: "40px", marginRight: "20px", marginInline: "auto" }}
         >
           ⬆️
         </button>
@@ -215,7 +215,7 @@ const Logic4 = () => {
         </button>
       </div>
 
-      <p className="mb-2 text-blue-700 font-semibold" style={{ marginLeft: "580px" }}>
+      <p className="mb-2 text-blue-700 font-semibold" style={{ marginInline: "auto" }}>
         Moves: {moveCount}
       </p>
 
@@ -227,7 +227,7 @@ const Logic4 = () => {
               fontWeight: "bold",
               fontSize: "18px",
               marginBottom: "8px",
-              marginLeft: "520px",
+              marginInline: "auto",
             }}
           >
             🎉 Round Completed!
@@ -246,7 +246,7 @@ const Logic4 = () => {
                 fontWeight: "600",
                 fontSize: "16px",
                 border: "none",
-                marginLeft: "450px",
+                marginInline: "auto",
               }}
             >
               👉 Next Round
@@ -258,7 +258,7 @@ const Logic4 = () => {
                 fontWeight: "bold",
                 fontSize: "18px",
                 marginBottom: "8px",
-                marginLeft: "650px",
+                marginInline: "auto",
               }}
             >
               ✅ All rounds completed!

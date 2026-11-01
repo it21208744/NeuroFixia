@@ -61,7 +61,9 @@ function MemoryCard() {
 
   const audioRef = useRef(new Audio(memorySound));
   const finishBellRef = useRef(new Audio(finishBellSound));
-  const webgazer = window.webgazer;
+  const [locked, setLocked] = useState(false);
+  const allMatched = items.every((it) => it.stat === "correct");
+  const finished = allMatched || timeLeft === 0;
 
   const {
     accuracy,
@@ -71,18 +73,29 @@ function MemoryCard() {
     formatTime,
     elapsedTime,
     setElapsedTime,
+    markDone,
   } = useContext(DataContext);
 
+  // Bug fix: the timer used to run forever (even after the game ended) and the page called
+  // window.webgazer which is no longer loaded globally.
   useEffect(() => {
-    webgazer.showPredictionPoints(false);
-    webgazer.pause();
-
-    const timer = setInterval(() => {
-      setElapsedTime((prev) => prev + 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
+    setElapsedTime(0);
+    setAccuracy(0);
+    setMemoryScore(0);
   }, []);
+
+  useEffect(() => {
+    if (reveal || finished) return undefined;
+    const timer = setInterval(() => setElapsedTime((prev) => prev + 1), 1000);
+    return () => clearInterval(timer);
+  }, [reveal, finished]);
+
+  useEffect(() => {
+    if (allMatched) {
+      markDone("memory");
+      audioRef.current.play().catch(() => {});
+    }
+  }, [allMatched]);
 
   // Automatically hide all cards after 20 seconds
   useEffect(() => {
@@ -94,19 +107,20 @@ function MemoryCard() {
   }, []);
 
   useEffect(() => {
+    if (reveal || allMatched) return undefined;
     if (timeLeft > 0) {
       const timer = setInterval(() => {
         setTimeLeft((prevTime) => prevTime - 1);
       }, 1000);
       return () => clearInterval(timer);
-    } else {
-      audioRef.current.pause();
     }
-  }, [timeLeft]);
+    markDone("memory");
+    return undefined;
+  }, [timeLeft, reveal, allMatched]);
 
   useEffect(() => {
-    if (timeLeft <= 10 && timeLeft > 0) {
-      finishBellRef.current.play();
+    if (timeLeft <= 10 && timeLeft > 0 && !allMatched) {
+      finishBellRef.current.play().catch(() => {});
     }
   }, [timeLeft]);
 
@@ -127,12 +141,14 @@ function MemoryCard() {
       items[current].stat = "wrong";
       items[prev].stat = "wrong";
       setItems([...items]);
+      setLocked(true);
       setTimeout(() => {
         items[current].stat = "";
         items[prev].stat = "";
         setItems([...items]);
         setPrev(-1);
-      }, 2000);
+        setLocked(false);
+      }, 1200);
     }
 
     // Accuracy=( Correct Matches / Total Attempts )×100 --------Memory recallAccuracy
@@ -154,6 +170,9 @@ function MemoryCard() {
   }
 
   function handleClick(id) {
+    // Bug fix: clicking the same card twice counted as a match, and cards could be clicked while
+    // still in the 20-second memorise phase or after the game ended.
+    if (reveal || locked || finished || id === prev || items[id].stat === "correct") return;
     if (prev === -1) {
       items[id].stat = "active";
       setItems([...items]);
@@ -163,7 +182,7 @@ function MemoryCard() {
     }
   }
 
-  const getTimeBarWidth = () => `${(timeLeft / 100) * 100}%`;
+  const getTimeBarWidth = () => `${(timeLeft / 180) * 100}%`;
 
   const downloadExcel = () => {
     const data = [
@@ -220,7 +239,17 @@ function MemoryCard() {
         ))}
       </div>
 
-      {timeLeft === 0 && <div className="game-over">Time&apos;s up! Game Over!</div>}
+      {reveal && (
+        <div className="game-over" style={{ color: "#1A73E8" }}>
+          👀 Memorise the cards! They will hide in 20 seconds.
+        </div>
+      )}
+      {allMatched && (
+        <div className="game-over" style={{ color: "#2e7d32" }}>
+          🎉 All pairs found! Go on to the Attention game.
+        </div>
+      )}
+      {timeLeft === 0 && !allMatched && <div className="game-over">Time&apos;s up! Game Over!</div>}
     </div>
   );
 }

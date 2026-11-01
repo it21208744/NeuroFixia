@@ -94,7 +94,7 @@ html,
   border-radius: 10px;
   overflow: hidden;
 
-  margin-left: -100px;
+  margin-left: 0;
 }
 
 /* Time Bar Fill */
@@ -119,7 +119,7 @@ html,
 /* Container for Memory Cards */
 .gcontainer {
   height: 600px;
-  width: 600px;
+  width: min(600px, 100%);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(4, 1fr);
@@ -194,7 +194,7 @@ html,
   border-radius: 5px; /* Rounded corners */
   cursor: pointer; /* Pointer cursor on hover */
   margin-top: 20px; /* Margin at the top */
-  margin-left: -10px;
+  margin-left: 0;
 }
 
 .download-button:hover {

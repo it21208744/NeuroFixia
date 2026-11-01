@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import api from "api/client";
 import PropTypes from "prop-types";
 import simonTalking from "./images/simonok.gif";
 import simonSad from "./images/saddd.png";
@@ -132,7 +133,7 @@ const Modal = ({ finalScore, onClose }) => {
           padding: "20px",
           borderRadius: "10px",
           textAlign: "center",
-          marginLeft: "320px",
+          maxWidth: "90vw",
         }}
       >
         <h2>Level Complete!</h2>
@@ -182,7 +183,7 @@ const InstructionsModal = ({ onClose }) => {
           padding: "20px",
           borderRadius: "10px",
           textAlign: "left",
-          marginLeft: "300px",
+          maxWidth: "90vw",
         }}
       >
         <h2>Instructions</h2>
@@ -277,32 +278,38 @@ export default function SimonSaysGame() {
       shouldIncrementScore = !isCorrect;
     }
 
-    if (shouldIncrementScore) {
-      setScore((prevScore) => prevScore + 1);
-    }
+    const newScore = score + (shouldIncrementScore ? 1 : 0);
+    setScore(newScore);
 
     // Update UI based on correctness
     if ((isSimonSays && isCorrect) || (!isSimonSays && !isCorrect)) {
       setActionStatus("correct");
       setShowGoodJob(true);
-      new Audio(goodJobSound).play();
+      new Audio(goodJobSound).play().catch(() => {});
     } else {
       setActionStatus("incorrect");
       setShowIncorrectImage(true);
-      new Audio(wrongSound).play();
+      new Audio(wrongSound).play().catch(() => {});
       setShowGoodJob(false);
     }
 
     setAttempts(newAttempts);
-    setTimeout(() => moveToNextCommand(newAttempts), 2000);
+    setTimeout(() => moveToNextCommand(newAttempts, newScore), 2000);
   };
 
-  const moveToNextCommand = (updatedAttempts) => {
+  // Bug fix: the final score used the stale `score` state (missing the last answer) and was never saved.
+  const moveToNextCommand = (updatedAttempts, updatedScore) => {
     if (currentIndex + 1 >= levels[currentLevel].length) {
       const finalScorePercentage =
-        updatedAttempts > 0 ? Math.round((score / updatedAttempts) * 100) : 0;
+        updatedAttempts > 0 ? Math.round((updatedScore / updatedAttempts) * 100) : 0;
       setFinalScore(finalScorePercentage);
       setShowModal(true);
+      api
+        .post("/social/scores", {
+          finalScore: finalScorePercentage,
+          currentLevel: String(currentLevel),
+        })
+        .catch(() => {});
     } else {
       setCurrentIndex((prevIndex) => prevIndex + 1);
       setActionStatus("");
@@ -355,8 +362,8 @@ export default function SimonSaysGame() {
 
   // Style objects
   const imageStyle = {
-    width: "300px",
-    height: "300px",
+    width: "min(300px, 60vw)",
+    height: "min(300px, 60vw)",
     objectFit: "contain",
     margin: "10px",
   };
@@ -369,10 +376,10 @@ export default function SimonSaysGame() {
     border: "none",
     cursor: "pointer",
     fontSize: "16px",
-    width: "20%",
-    marginTop: "18px",
-    marginLeft: "500px",
-    marginRight: "100px",
+    width: "min(260px, 80%)",
+    marginTop: "12px",
+    marginLeft: "auto",
+    marginRight: "auto",
     display: "block",
     textAlign: "center",
   };
@@ -385,10 +392,10 @@ export default function SimonSaysGame() {
     border: "none",
     cursor: "pointer",
     fontSize: "16px",
-    width: "20%",
-    marginTop: "5px",
-    marginLeft: "500px",
-    marginRight: "100px",
+    width: "min(260px, 80%)",
+    marginTop: "12px",
+    marginLeft: "auto",
+    marginRight: "auto",
     display: "block",
     textAlign: "center",
   };
@@ -401,10 +408,10 @@ export default function SimonSaysGame() {
     border: "none",
     cursor: "pointer",
     fontSize: "16px",
-    width: "20%",
-    marginTop: "15px",
-    marginLeft: "500px",
-    marginRight: "100px",
+    width: "min(260px, 80%)",
+    marginTop: "12px",
+    marginLeft: "auto",
+    marginRight: "auto",
     display: "block",
     textAlign: "center",
   };
@@ -416,12 +423,15 @@ export default function SimonSaysGame() {
           backgroundImage: gameStarted ? `url(${downImg})` : `url(${downloadImg})`,
           backgroundRepeat: "no-repeat",
           backgroundSize: "cover",
-          width: "79vw",
-          height: "60vh",
+          backgroundPosition: "center",
+          width: "100%",
+          minHeight: "60vh",
+          borderRadius: "16px",
+          padding: "16px 8px 24px",
         }}
       >
         <center>
-          <h1 className="text-xl font-bold mb-4">Simon Says Game</h1>
+          <h1 style={{ fontSize: "1.8rem", marginBottom: 12 }}>Simon Says Game</h1>
         </center>
 
         {!gameStarted ? (
@@ -453,9 +463,11 @@ export default function SimonSaysGame() {
           <>
             <center>
               <img src={getImageForAction()} alt="Simon Character" style={imageStyle} />
-              <p className="text-lg mb-4">{currentCommand.text}</p>
+              <p style={{ fontSize: "1.25rem", fontWeight: 600, margin: "8px 0 12px" }}>
+                {currentCommand.text}
+              </p>
             </center>
-            <div className="flex space-x-4">
+            <div>
               <button style={buttonStyle2} onClick={() => handleResponse(true)}>
                 {"Child Did ✅"}
               </button>

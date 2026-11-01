@@ -1,0 +1,12 @@
+# Pinned: the social-skills pickles were produced with scikit-learn 1.5.1
+flask==3.1.1
+gunicorn==23.0.0
+numpy==1.26.4
+pandas==2.2.3
+scikit-learn==1.5.1
+joblib==1.4.2
+tensorflow-cpu==2.17.1
+mediapipe==0.10.14
+opencv-python-headless==4.10.0.84
+nltk==3.9.1
+requests==2.32.3

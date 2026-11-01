@@ -6,6 +6,10 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import api from "api/client";
+import correctSound from "components/Cognitive/correctselect.mp3";
+import wrongSound from "components/Cognitive/wrongselect.mp3";
 
 import happy from "./images/happy.jpg";
 import sad from "./images/sad.jpg";
@@ -46,7 +50,7 @@ const shuffleArray = (array) => {
   return newArray;
 };
 
-const DraggableExpression = ({ expression }) => {
+const DraggableExpression = ({ expression, selected, onSelect }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "expression",
     item: expression,
@@ -58,14 +62,17 @@ const DraggableExpression = ({ expression }) => {
   return (
     <Box
       ref={drag}
+      onClick={() => onSelect(expression)}
+      role="button"
+      aria-pressed={selected}
       sx={{
         width: IMAGE_SIZE,
         height: IMAGE_SIZE,
         m: 1,
         borderRadius: 1,
         overflow: "hidden",
-        border: "1px solid #ccc",
-        boxShadow: isDragging ? "0 0 10px #aaa" : "none",
+        border: selected ? "3px solid #1A73E8" : "1px solid #ccc",
+        boxShadow: isDragging || selected ? "0 0 10px #90caf9" : "none",
         cursor: "move",
         opacity: isDragging ? 0.5 : 1,
         display: "flex",
@@ -92,9 +99,11 @@ DraggableExpression.propTypes = {
     src: PropTypes.string.isRequired,
     category: PropTypes.string.isRequired,
   }).isRequired,
+  selected: PropTypes.bool.isRequired,
+  onSelect: PropTypes.func.isRequired,
 };
 
-const DropBasket = ({ category, onDropExpression }) => {
+const DropBasket = ({ category, onDropExpression, onTap }) => {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "expression",
     drop: (item) => onDropExpression(item, category),
@@ -106,7 +115,9 @@ const DropBasket = ({ category, onDropExpression }) => {
   return (
     <Box
       ref={drop}
+      onClick={onTap}
       sx={{
+        cursor: "pointer",
         width: IMAGE_SIZE,
         height: IMAGE_SIZE,
         m: 1.5,
@@ -128,7 +139,7 @@ const DropBasket = ({ category, onDropExpression }) => {
         {emojiMap[category]}
       </Typography>
       <Typography variant="subtitle1" component="div" fontWeight="bold" textAlign="center">
-        {category} Basket
+        {category}
       </Typography>
     </Box>
   );
@@ -137,22 +148,57 @@ const DropBasket = ({ category, onDropExpression }) => {
 DropBasket.propTypes = {
   category: PropTypes.string.isRequired,
   onDropExpression: PropTypes.func.isRequired,
+  onTap: PropTypes.func.isRequired,
 };
 
 const FacialExpressionGame = () => {
   const [expressions, setExpressions] = useState([]);
   const [feedback, setFeedback] = useState("");
+  const [selected, setSelected] = useState(null);
+  const [attempts, setAttempts] = useState(0);
+  const [startedAt, setStartedAt] = useState(Date.now());
+  const [saved, setSaved] = useState(false);
+
+  const reset = () => {
+    setExpressions(shuffleArray(originalExpressions));
+    setFeedback("");
+    setSelected(null);
+    setAttempts(0);
+    setSaved(false);
+    setStartedAt(Date.now());
+  };
+  useEffect(reset, []);
+
+  const finished = expressions.length === 0 && attempts > 0;
 
   useEffect(() => {
-    setExpressions(shuffleArray(originalExpressions));
-  }, []);
+    if (finished && !saved) {
+      setSaved(true);
+      api
+        .post("/behavioral/expression-game", {
+          correct: originalExpressions.length,
+          total: attempts,
+          seconds: Math.round((Date.now() - startedAt) / 1000),
+        })
+        .catch(() => {});
+    }
+  }, [finished]);
 
+  // Bug fix: correctly sorted faces now leave the list, so the game can actually be completed.
   const handleDrop = (item, dropCategory) => {
+    setAttempts((n) => n + 1);
+    setSelected(null);
     const isCorrect = item.category === dropCategory;
+    if (isCorrect) {
+      setExpressions((list) => list.filter((e) => e.id !== item.id));
+      new Audio(correctSound).play().catch(() => {});
+    } else {
+      new Audio(wrongSound).play().catch(() => {});
+    }
     setFeedback(
       isCorrect
-        ? `✅ Correct! ${item.name} goes in the ${dropCategory} basket.`
-        : `❌ Incorrect! ${item.name} does not belong in the ${dropCategory} basket.`
+        ? `✅ Great! That face is ${dropCategory.toLowerCase()}.`
+        : `❌ Not quite - that face is not ${dropCategory.toLowerCase()}. Try again!`
     );
   };
 
@@ -160,10 +206,10 @@ const FacialExpressionGame = () => {
     <DndProvider backend={HTML5Backend}>
       <Box
         sx={{
-          p: 4,
-          maxWidth: 700,
+          p: { xs: 2, md: 4 },
+          maxWidth: 760,
           mx: "auto",
-          bgcolor: "background.default",
+          bgcolor: "background.paper",
           borderRadius: 2,
           boxShadow: 3,
         }}
@@ -171,6 +217,19 @@ const FacialExpressionGame = () => {
         <Typography variant="h4" align="center" gutterBottom fontWeight="bold">
           Facial Expression Sorting Game
         </Typography>
+        <Typography variant="body2" align="center" color="text.secondary" mb={2}>
+          Drag each face into the matching basket - or tap a face, then tap a basket.
+        </Typography>
+        {finished && (
+          <Box textAlign="center" my={3}>
+            <Typography variant="h5" color="success.main">
+              🎉 All faces sorted in {attempts} tries!
+            </Typography>
+            <Button variant="contained" onClick={reset} sx={{ mt: 2, color: "#fff !important" }}>
+              Play again
+            </Button>
+          </Box>
+        )}
 
         <Grid container spacing={2} alignItems="flex-start">
           {/* Left column: draggable expressions */}
@@ -180,7 +239,12 @@ const FacialExpressionGame = () => {
             </Typography>
             <Grid container direction="column" alignItems="center">
               {expressions.map((exp) => (
-                <DraggableExpression key={exp.id} expression={exp} />
+                <DraggableExpression
+                  key={exp.id}
+                  expression={exp}
+                  selected={selected?.id === exp.id}
+                  onSelect={(e) => setSelected(selected?.id === e.id ? null : e)}
+                />
               ))}
             </Grid>
           </Grid>
@@ -193,7 +257,11 @@ const FacialExpressionGame = () => {
             <Grid container direction="row" justifyContent="center" spacing={2}>
               {categories.map((cat) => (
                 <Grid item key={cat}>
-                  <DropBasket category={cat} onDropExpression={handleDrop} />
+                  <DropBasket
+                    category={cat}
+                    onDropExpression={handleDrop}
+                    onTap={() => selected && handleDrop(selected, cat)}
+                  />
                 </Grid>
               ))}
             </Grid>

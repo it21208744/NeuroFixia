@@ -1,116 +1,94 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-import { useEffect, createContext, useState, useContext } from "react";
-// @mui material components
-import Grid from "@mui/material/Grid";
-import Card from "@mui/material/Card";
-
-// Material Dashboard 2 React components
+import { createContext, useCallback, useMemo, useState } from "react";
 import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
-
-// Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import PageHeader from "components/common/PageHeader";
 import LearningNav from "components/Learning/LearningNav";
-import Footer from "examples/Footer";
-import DataTable from "examples/Tables/DataTable";
-
-// Data
-import authorsTableData from "layouts/tables/data/authorsTableData";
-import projectsTableData from "layouts/tables/data/projectsTableData";
-import TestComponent1 from "components/Learning/TestComponent1";
-import TestComponent2 from "components/Learning/TestComponent2";
 
 export const DataContext = createContext(null);
 
-function Tables() {
-  const { columns, rows } = authorsTableData();
-  const { columns: pColumns, rows: pRows } = projectsTableData();
+const formatTime = (seconds) => {
+  const s = Math.max(0, Math.round(seconds));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+};
 
-  //memory card
+export default function Learning() {
+  // memory game
   const [accuracy, setAccuracy] = useState(0);
   const [memoryScore, setMemoryScore] = useState(0);
-  const [gazeDataCollection, setGazeDataCollection] = useState([]);
-  //const [gazeDataCollection, setGazeDataCollection] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
-  };
-
-  //Logical
+  // logic game
   const [score, setScore] = useState(0);
   const [errors, setErrors] = useState(0);
   const [completionTimes, setCompletionTimes] = useState([]);
-  const totalTime = completionTimes.reduce((acc, time) => acc + time, 0);
-
-  //Shadow
+  const totalTime = completionTimes.reduce((acc, t) => acc + t, 0);
+  // attention (shadow) game
   const [shadowScore, setShadowScore] = useState(100);
-  //const [elapsedTime, setTimeElapsed] = useState([])
   const [completedPatterns, setCompletedPatterns] = useState([]);
-  const [gazeShiftsCount, setGazeShiftsCount] = useState([]);
-  const [fixationDuration, setFixationDuration] = useState([]);
+  const [gazeShiftsCount, setGazeShiftsCount] = useState(0);
+  const [fixationDuration, setFixationDuration] = useState(0);
+  // which of the three assessment games have been completed this session
+  const [done, setDone] = useState({});
+  const markDone = useCallback((k) => setDone((d) => (d[k] ? d : { ...d, [k]: true })), []);
+
+  const value = useMemo(
+    () => ({
+      elapsedTime,
+      setElapsedTime,
+      accuracy,
+      setAccuracy,
+      memoryScore,
+      setMemoryScore,
+      formatTime,
+      score,
+      setScore,
+      errors,
+      setErrors,
+      totalTime,
+      completionTimes,
+      setCompletionTimes,
+      shadowScore,
+      setShadowScore,
+      completedPatterns,
+      setCompletedPatterns,
+      gazeShiftsCount,
+      setGazeShiftsCount,
+      fixationDuration,
+      setFixationDuration,
+      done,
+      markDone,
+    }),
+    [
+      elapsedTime,
+      accuracy,
+      memoryScore,
+      score,
+      errors,
+      totalTime,
+      completionTimes,
+      shadowScore,
+      completedPatterns,
+      gazeShiftsCount,
+      fixationDuration,
+      done,
+      markDone,
+    ]
+  );
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDBox pt={6} pb={3}>
-        <Grid container spacing={6}>
-          <Grid item xs={12}>
-            <DataContext.Provider
-              value={{
-                elapsedTime,
-                setElapsedTime,
-                accuracy,
-                setAccuracy,
-                memoryScore,
-                setMemoryScore,
-                formatTime,
-                score,
-                setScore,
-                errors,
-                setErrors,
-                totalTime,
-                completionTimes,
-                setCompletionTimes,
-                shadowScore,
-                setShadowScore,
-                //elapsedTime,
-                //setTimeElapsed,
-                completedPatterns,
-                setCompletedPatterns,
-                gazeShiftsCount,
-                setGazeShiftsCount,
-                fixationDuration,
-                setFixationDuration,
-                gazeDataCollection,
-                setGazeDataCollection,
-              }}
-            >
-              <LearningNav />
-            </DataContext.Provider>
-
-            {/* sample page learning */}
-          </Grid>
-        </Grid>
+      <MDBox py={3}>
+        <PageHeader
+          icon="extension"
+          title="Learning abilities"
+          color="primary"
+          subtitle="Memory, attention and logical-thinking games with eye tracking"
+        />
+        <DataContext.Provider value={value}>
+          <LearningNav />
+        </DataContext.Provider>
       </MDBox>
-      {/* <Footer /> */}
     </DashboardLayout>
   );
 }
-
-export default Tables;

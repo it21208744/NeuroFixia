@@ -70,7 +70,7 @@ const Memory1 = () => {
         )
       ) : step - students.length < students.length ? (
         <div>
-          <h2 style={{ marginLeft: "300px" }}>🤔 Can you remember their name? 👀</h2>
+          <h2 style={{ marginInline: "auto" }}>🤔 Can you remember their name? 👀</h2>
           <img
             src={students[step - students.length].image}
             alt="Test Child"
@@ -90,7 +90,7 @@ const Memory1 = () => {
           </div>
         </div>
       ) : (
-        <h2 style={{ marginLeft: "400px" }}>Test completed! Your score: {score}/5</h2>
+        <h2 style={{ marginInline: "auto" }}>Test completed! Your score: {score}/5</h2>
       )}
     </div>
   );

@@ -1,0 +1,16 @@
+{
+  "selected": "logreg",
+  "cv": "5x10 repeated stratified k-fold",
+  "results": {
+    "logreg": {
+      "accuracy": 0.84,
+      "roc_auc": 0.8749,
+      "f1": 0.8269
+    },
+    "random_forest": {
+      "accuracy": 0.85,
+      "roc_auc": 0.8663,
+      "f1": 0.8313
+    }
+  }
+}

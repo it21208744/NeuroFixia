@@ -26,9 +26,9 @@
 /* Grid styles */
 .a2-grid {
   display: grid;
-  width: 450px;
+  width: min(450px, 100%);
   height: 450px;
-  margin-left: 300px;
+  margin-left: auto;
 }
 
 .a2-grid-cols-4 {

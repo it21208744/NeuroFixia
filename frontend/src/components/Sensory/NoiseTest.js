@@ -1,5 +1,6 @@
-import React, { useState, useRef } from "react";
-import axios from "axios";
+import React, { useState, useRef, useEffect } from "react";
+import api, { errorMessage } from "api/client";
+import { cameraErrorMessage, pickMimeType, extFor } from "utils/media";
 import {
   Card,
   CardContent,
@@ -11,6 +12,8 @@ import {
   Box,
   CircularProgress,
   Collapse,
+  Alert,
+  LinearProgress,
   IconButton,
 } from "@mui/material";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
@@ -26,11 +29,22 @@ const NoiseTest = () => {
   const [age, setAge] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [error, setError] = useState("");
 
   const webcamRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const recordedChunks = useRef([]);
   const audioRef = useRef(new Audio());
+
+  // Stop sound and camera when leaving the page (they used to keep running in the background)
+  useEffect(
+    () => () => {
+      audioRef.current.pause();
+      webcamRef.current?.srcObject?.getTracks().forEach((t) => t.stop());
+      if (mediaRecorderRef.current?.state === "recording") mediaRecorderRef.current.stop();
+    },
+    []
+  );
 
   const noises = {
     white_noise: "/sounds/sound1.mp3",
@@ -42,6 +56,7 @@ const NoiseTest = () => {
   const startRecording = async () => {
     recordedChunks.current = [];
     setPrediction(null);
+    setError("");
     setRecording(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -53,9 +68,8 @@ const NoiseTest = () => {
         webcamRef.current.play();
       }
 
-      mediaRecorderRef.current = new MediaRecorder(stream, {
-        mimeType: "video/webm",
-      });
+      const mimeType = pickMimeType(); // Safari cannot record webm
+      mediaRecorderRef.current = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
 
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -64,10 +78,9 @@ const NoiseTest = () => {
       };
 
       mediaRecorderRef.current.onstop = () => {
-        const blob = new Blob(recordedChunks.current, { type: "video/webm" });
-        const file = new File([blob], "recorded_video.webm", {
-          type: "video/webm",
-        });
+        const type = mediaRecorderRef.current.mimeType || "video/webm";
+        const blob = new Blob(recordedChunks.current, { type });
+        const file = new File([blob], `recorded_video.${extFor(type)}`, { type });
         setVideoBlob(URL.createObjectURL(blob));
         setVideoFile(file);
         // Stop webcam preview
@@ -79,7 +92,7 @@ const NoiseTest = () => {
 
       mediaRecorderRef.current.start();
     } catch (error) {
-      console.error("Error accessing webcam:", error);
+      setError(cameraErrorMessage(error));
       setRecording(false);
     }
   };
@@ -99,7 +112,7 @@ const NoiseTest = () => {
     } else {
       audioRef.current.src = noises[selectedNoise];
       audioRef.current.loop = true;
-      audioRef.current.play();
+      audioRef.current.play().catch(() => setError("Could not play the sound."));
       setNoisePlaying(true);
     }
   };
@@ -112,7 +125,7 @@ const NoiseTest = () => {
 
     // Validate file type (optional)
     if (!file.type.startsWith("video/")) {
-      alert("Please select a valid video file.");
+      setError("Please select a valid video file.");
       return;
     }
 
@@ -130,9 +143,10 @@ const NoiseTest = () => {
   // Upload video to backend for prediction
   const handleVideoUpload = async () => {
     if (!videoFile) {
-      alert("Please select or record a video first.");
+      setError("Please select or record a video first.");
       return;
     }
+    setError("");
 
     setLoading(true);
     setPrediction(null);
@@ -140,14 +154,15 @@ const NoiseTest = () => {
     try {
       const formData = new FormData();
       formData.append("file", videoFile);
+      formData.append("age", age);
+      formData.append("noise", selectedNoise);
 
-      const response = await axios.post("http://localhost:5031/predict", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = await api.post("/sensory/predict", formData);
 
       setPrediction({
         finalPrediction: response.data.final_prediction,
-        cnnLstmPrediction: response.data.cnn_lstm_prediction,
+        cnnLstmPrediction: response.data.pose_prediction,
+        features: response.data.reaction_features || {},
         confidenceHypersensitive: Math.round(response.data.confidence_hypersensitivity * 100),
         confidenceNotHypersensitive: Math.round(
           response.data.confidence_not_hypersensitivity * 100
@@ -156,8 +171,7 @@ const NoiseTest = () => {
         emotionAligned: response.data.emotion_alignment_with_hypersensitivity,
       });
     } catch (error) {
-      console.error("Upload error:", error);
-      alert("Error processing video. Please try again.");
+      setError(errorMessage(error, "Error processing video. Please try again."));
     }
     setLoading(false);
   };
@@ -174,7 +188,7 @@ const NoiseTest = () => {
   };
 
   return (
-    <Card sx={{ maxWidth: 700, margin: "auto", mt: 5, p: 3 }}>
+    <Card sx={{ maxWidth: 760, margin: "auto", p: { xs: 1, md: 3 } }}>
       <CardContent>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Typography variant="h5" gutterBottom>
@@ -215,8 +229,8 @@ const NoiseTest = () => {
                 <b>Play Noise:</b> Click “Play Noise” to start and “Stop Noise” to stop the sound.
               </li>
               <li>
-                <b>Record Reaction:</b> Click “Start Recording” to record the child's reaction via
-                webcam. Click “Stop Recording” to end.
+                <b>Record Reaction:</b> Click “Start Recording” to record the child&apos;s reaction
+                via webcam. Click “Stop Recording” to end.
               </li>
               <li>
                 <b>Or Upload Video:</b> You can upload a pre-recorded video instead of recording.
@@ -234,8 +248,14 @@ const NoiseTest = () => {
           </Box>
         </Collapse>
 
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         <Typography mb={2}>
-          Please enter the child's age. Only children aged 3 to 7 can proceed with the test.
+          Please enter the child&apos;s age. Only children aged 3 to 7 can proceed with the test.
         </Typography>
 
         <TextField
@@ -350,8 +370,11 @@ const NoiseTest = () => {
             </Box>
 
             {loading && (
-              <Box mt={2} textAlign="center">
-                <CircularProgress />
+              <Box mt={2}>
+                <LinearProgress />
+                <Typography variant="caption">
+                  Analysing body reactions and facial emotion…
+                </Typography>
               </Box>
             )}
 
@@ -361,7 +384,7 @@ const NoiseTest = () => {
                   <Typography variant="h6" gutterBottom>
                     Final Prediction: {prediction.finalPrediction}
                   </Typography>
-                  <Typography>CNN-LSTM Prediction: {prediction.cnnLstmPrediction}</Typography>
+                  <Typography>Body-reaction model: {prediction.cnnLstmPrediction}</Typography>
                   <Typography>
                     Confidence (Hypersensitivity): {prediction.confidenceHypersensitive}%
                   </Typography>
@@ -371,6 +394,12 @@ const NoiseTest = () => {
                   <Typography>Dominant Emotion: {prediction.dominantEmotion}</Typography>
                   <Typography>
                     Emotion Alignment: {prediction.emotionAligned ? "Aligned" : "Not Aligned"}
+                  </Typography>
+                  <Typography variant="body2" mt={1}>
+                    Hand on ear:{" "}
+                    {Math.round((prediction.features.fraction_time_hand_on_ear || 0) * 100)}% of the
+                    time · longest {prediction.features.longest_covering_seconds || 0}s · head
+                    agitation {Math.round((prediction.features.head_agitation || 0) * 100)}%
                   </Typography>
                 </Box>
                 {/* Case 1: Both CNN-LSTM and Final Prediction say Hypersensitivity */}
@@ -392,7 +421,7 @@ const NoiseTest = () => {
                       <strong>hypersensitivity</strong>.<br />
                       We strongly recommend contacting a medical professional for further guidance.
                       <br />
-                      You can book a consultation through Richway Arya Hospital:
+                      You can book a consultation through Lady Ridgeway Hospital for Children:
                       <br />
                       <a
                         href="https://lrh.health.gov.lk/home-en/"
@@ -424,7 +453,7 @@ const NoiseTest = () => {
                       reactions show signs of <strong>hypersensitivity</strong>.<br />
                       We recommend contacting a medical professional to assess the situation.
                       <br />
-                      You can book a consultation through Richway Arya Hospital:
+                      You can book a consultation through Lady Ridgeway Hospital for Children:
                       <br />
                       <a
                         href="https://lrh.health.gov.lk/home-en/"

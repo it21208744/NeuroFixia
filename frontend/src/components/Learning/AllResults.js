@@ -1,274 +1,266 @@
-import { useContext, useState } from "react";
-import { DataContext } from "layouts/Learning";
+import { useContext, useEffect, useState } from "react";
+import PropTypes from "prop-types";
+import Grid from "@mui/material/Grid";
+import Alert from "@mui/material/Alert";
+import Chip from "@mui/material/Chip";
+import LinearProgress from "@mui/material/LinearProgress";
+import Icon from "@mui/material/Icon";
 import * as XLSX from "xlsx";
-import axios from "axios"; // Import axios for API requests
-import { useNavigate } from "react-router-dom";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
+import MDBox from "components/MDBox";
+import MDTypography from "components/MDTypography";
+import MDButton from "components/MDButton";
+import Disclaimer from "components/common/Disclaimer";
+import { DataContext } from "layouts/Learning";
+import api, { errorMessage } from "api/client";
 
-const AllResults = () => {
-  const {
-    fixationDuration,
-    gazeShiftsCount,
-    shadowScore,
-    accuracy,
-    elapsedTime,
-    memoryScore,
-    totalTime,
-    errors,
-    score,
-    formatTime,
-  } = useContext(DataContext);
+const LEVEL_COLOR = { Good: "success", Moderate: "info", Low: "warning" };
+const SUGGEST = { attention: "Attention1", memory: "Memory1", logic: "Logic1" };
 
-  const [predictionResult, setPredictionResult] = useState(null);
-  const [probabilityAutism, setProbabilityAutism] = useState(null);
-  const [probabilityTD, setProbabilityTD] = useState(null);
-  const [confidenceScore, setConfidenceScore] = useState(null);
-  const [dataSaved, setDataSaved] = useState(false);
-  const [attentionLevel, setAttentionLevel] = useState(null);
-  const [logicalThinkingLevel, setLogicalThinkingLevel] = useState(null);
-  const [memoryLevel, setMemoryLevel] = useState(null);
-  const [showSuggestionButton, setShowSuggestionButton] = useState(false);
+/*
+ * Bug fixes: parents previously had to click "AUTISM" or "TD" (labelling their own child) before
+ * "Predict" was enabled, the browser called the Flask model directly on 127.0.0.1:5021, every click
+ * downloaded an Excel file, and "Suggest Activity" called an undefined setTabValue().
+ */
+export default function AllResults({ go }) {
+  const c = useContext(DataContext);
+  const [result, setResult] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [history, setHistory] = useState([]);
 
-  const navigate = useNavigate(); // Initialize navigate function
+  const loadHistory = () =>
+    api
+      .get("/cognitive/results")
+      .then((r) => setHistory(r.data))
+      .catch(() => {});
+  useEffect(() => {
+    loadHistory();
+  }, []);
 
-  const getPerformanceLevel = (score) => {
-    if (score >= 71) return "Good";
-    if (score >= 41) return "Moderate";
-    return "Low";
+  const metrics = {
+    fixationDuration: Number(c.fixationDuration) || 0,
+    gazeShiftsCount: Number(c.gazeShiftsCount) || 0,
+    attentionScore: Number(c.shadowScore) || 0,
+    accuracy: Number((c.accuracy || 0).toFixed(2)),
+    timeSpent: Number(c.elapsedTime) || 0,
+    memoryScore: Number((c.memoryScore || 0).toFixed(2)),
+    totalTime: Number(c.totalTime) || 0,
+    errors: Number(c.errors) || 0,
+    score: Number(c.score) || 0,
+  };
+  const ready = c.done.memory && c.done.attention && c.done.logic;
+
+  const analyse = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      const { data } = await api.post("/cognitive/analyze", metrics);
+      setResult(data);
+      loadHistory();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const handleSubmit = async (label) => {
-    const excelData = [
+  const exportXlsx = () => {
+    const ws = XLSX.utils.json_to_sheet([
       {
-        Fixation_Duration: fixationDuration,
-        Gaze_Shift_Count: gazeShiftsCount,
-        Attention_Score: shadowScore,
-        Memory_Recall_Accuracy: Number(accuracy.toFixed(2)),
-        Response_Time: formatTime(elapsedTime),
-        Memory_Score: Number(memoryScore.toFixed(2)),
-        Logical_Task_Completion_Time: totalTime,
-        Logical_Task_Errors: errors,
-        Logical_Score: score,
-        AUTISM_LABEL: label,
+        Fixation_Duration: metrics.fixationDuration,
+        Gaze_Shift_Count: metrics.gazeShiftsCount,
+        Attention_Score: metrics.attentionScore,
+        Memory_Recall_Accuracy: metrics.accuracy,
+        Response_Time: c.formatTime(metrics.timeSpent),
+        Memory_Score: metrics.memoryScore,
+        Logical_Task_Completion_Time: metrics.totalTime,
+        Logical_Task_Errors: metrics.errors,
+        Logical_Score: metrics.score,
+        Prediction: result ? (result.prediction === 1 ? "Needs support" : "Typical") : "",
       },
-    ];
-
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Game Results");
-
-    await new Promise((resolve) => {
-      XLSX.writeFile(workbook, "Game_Results.xlsx");
-      setTimeout(resolve, 1000);
-    });
-
-    try {
-      const data = {
-        accuracy: Number(accuracy.toFixed(2)),
-        memoryScore: Number(memoryScore.toFixed(2)),
-        timeSpent: Number(elapsedTime),
-        gazeShiftsCount: Number(gazeShiftsCount),
-        fixationDuration: Number(fixationDuration),
-        attentionScore: Number(shadowScore),
-        score: Number(score),
-        errors: Number(errors),
-        totalTime: Number(totalTime),
-      };
-
-      await axios.post("http://localhost:8080/game/add", data);
-      console.log("Data sent to database successfully");
-      setDataSaved(true);
-    } catch (error) {
-      console.error("Error saving data:", error);
-    }
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Game Results");
+    XLSX.writeFile(wb, "neurofixia_learning_results.xlsx");
   };
 
-  const handlePredict = async () => {
-    if (!dataSaved) {
-      alert("Please save data first by clicking ASD or TD button.");
-      return;
-    }
-
-    try {
-      const requestData = {
-        features: [
-          Number(fixationDuration),
-          Number(gazeShiftsCount),
-          Number(shadowScore),
-          Number(accuracy),
-          Number(elapsedTime),
-          Number(memoryScore),
-          Number(totalTime),
-          Number(errors),
-          Number(score),
-        ],
-      };
-
-      console.log("Sending request data:", requestData);
-
-      const response = await axios.post("http://127.0.0.1:5021/predict", requestData);
-
-      const { prediction, probability_autism, probability_td, confidence_score } = response.data;
-
-      setPredictionResult(prediction);
-      setProbabilityAutism(probability_autism);
-      setProbabilityTD(probability_td);
-      setConfidenceScore(confidence_score);
-      setAttentionLevel(getPerformanceLevel(shadowScore));
-      setMemoryLevel(getPerformanceLevel(memoryScore));
-      setLogicalThinkingLevel(getPerformanceLevel(score));
-
-      setShowSuggestionButton(true); // Always show suggestion button after prediction
-    } catch (error) {
-      console.error("Error fetching prediction:", error);
-    }
-  };
-
-  const handleSuggestionClick = () => {
-    setTabValue("subhome");
-  };
+  const rows = [
+    ["Memory accuracy", `${metrics.accuracy}%`],
+    ["Memory score", metrics.memoryScore],
+    ["Memory time", c.formatTime(metrics.timeSpent)],
+    ["Attention score", `${metrics.attentionScore}/100`],
+    ["Time to first look at target", `${metrics.fixationDuration}s`],
+    ["Gaze shifts away", metrics.gazeShiftsCount],
+    ["Logic score", `${metrics.score}/100`],
+    ["Logic errors", metrics.errors],
+    ["Logic time", `${metrics.totalTime}s`],
+  ];
+  const low = result
+    ? Object.entries(result.levels)
+        .filter(([, v]) => v === "Low")
+        .map(([k]) => k)
+    : [];
 
   return (
-    <div style={{ marginTop: "20px" }}>
-      <button
-        onClick={() => handleSubmit("ASD")}
-        style={{ ...styles.cButton, marginLeft: "800px" }}
-      >
-        AUTISM
-      </button>
-      <button onClick={() => handleSubmit("TD")} style={{ ...styles.cButton, marginLeft: "40px" }}>
-        TD
-      </button>
-      <button
-        onClick={handlePredict}
-        style={{ ...styles.cButton, marginLeft: "40px" }}
-        disabled={!dataSaved}
-      >
-        Predict
-      </button>
-
-      {predictionResult !== null && (
-        <div className="prediction-result">
-          <h2 style={{ marginLeft: "40px" }}>
-            Prediction Result: {predictionResult === 1 ? "Autistic" : "Typical Development (TD)"}
-          </h2>
-          <p style={{ marginLeft: "40px" }}>
-            <strong>Probability of Cognitive Disabilities:</strong> {probabilityAutism}%
-          </p>
-          <p style={{ marginLeft: "40px" }}>
-            <strong>Probability of Strong Cognitive Abilities:</strong> {probabilityTD}%
-          </p>
-          <p style={{ marginLeft: "40px" }}>
-            <strong>Confidence Score:</strong> {confidenceScore}%
-          </p>
-          <br />
-          <br />
-          <h3 style={{ marginLeft: "40px" }}>Performance Levels</h3>
-          <p style={{ marginLeft: "40px" }}>
-            <strong>Attention:</strong> {attentionLevel}
-          </p>
-          <p style={{ marginLeft: "40px" }}>
-            <strong>Logical Thinking:</strong> {logicalThinkingLevel}
-          </p>
-          <p style={{ marginLeft: "40px" }}>
-            <strong>Memory:</strong> {memoryLevel}
-          </p>
-          <br />
-          <br />
-          {showSuggestionButton && (
-            <button
-              onClick={handleSuggestionClick}
-              className="suggestion-button"
-              style={{ ...styles.cButton, marginBottom: "10px" }}
-            >
-              Suggest Activity
-            </button>
-          )}
-
-          {(attentionLevel === "Low" ||
-            logicalThinkingLevel === "Low" ||
-            memoryLevel === "Low") && (
-            <div>
-              <p>
-                It looks like your child is facing challenges with{" "}
-                {[
-                  attentionLevel === "Low" ? "Attention" : null,
-                  logicalThinkingLevel === "Low" ? "Logical Thinking" : null,
-                  memoryLevel === "Low" ? "Memory" : null,
-                ]
-                  .filter(Boolean)
-                  .join(" & ")}
-                . With the right suggestion activities, they can improve. Good luck!
-              </p>
-              <br />
-              {attentionLevel === "Low" && (
-                <button
-                  className="low-level-button"
-                  style={{ ...styles.cButton, marginLeft: "10px" }}
-                >
-                  Attention
-                </button>
-              )}
-              {logicalThinkingLevel === "Low" && (
-                <button
-                  className="low-level-button"
-                  style={{ ...styles.cButton, marginRight: "30px" }}
-                >
-                  Logical Thinking
-                </button>
-              )}
-              {memoryLevel === "Low" && (
-                <button
-                  className="low-level-button"
-                  style={{ ...styles.cButton, marginLeft: "30px" }}
-                >
-                  Memory
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+    <MDBox>
+      {!ready && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Complete the Memory, Attention and Logic games first (done:{" "}
+          {["memory", "attention", "logic"].filter((k) => c.done[k]).join(", ") || "none"}).
+        </Alert>
       )}
-
-      <div style={styles.resultImage}>
-        <img src="/images/result.png" alt="Result" style={styles.image} />
-      </div>
-    </div>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={5}>
+          <MDTypography variant="h6" mb={1}>
+            This session&apos;s game metrics
+          </MDTypography>
+          {rows.map(([k, v]) => (
+            <MDBox
+              key={k}
+              display="flex"
+              justifyContent="space-between"
+              py={0.5}
+              sx={{ borderBottom: "1px solid #f0f0f0" }}
+            >
+              <MDTypography variant="button" color="text">
+                {k}
+              </MDTypography>
+              <MDTypography variant="button" fontWeight="medium">
+                {v}
+              </MDTypography>
+            </MDBox>
+          ))}
+          <MDBox mt={2} display="flex" gap={1} flexWrap="wrap">
+            <MDButton
+              variant="gradient"
+              color="success"
+              onClick={analyse}
+              disabled={!ready || busy}
+            >
+              <Icon sx={{ mr: 1 }}>analytics</Icon> Analyse
+            </MDButton>
+            <MDButton variant="outlined" color="info" onClick={exportXlsx}>
+              <Icon sx={{ mr: 1 }}>download</Icon> Excel
+            </MDButton>
+          </MDBox>
+          {busy && <LinearProgress sx={{ mt: 2 }} />}
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
+          )}
+        </Grid>
+        <Grid item xs={12} md={7}>
+          {result ? (
+            <MDBox>
+              <MDBox
+                p={2}
+                borderRadius="lg"
+                mb={2}
+                sx={{
+                  background: result.prediction === 1 ? "#fff7ed" : "#ecfdf5",
+                  border: `1px solid ${result.prediction === 1 ? "#fdba74" : "#6ee7b7"}`,
+                }}
+              >
+                <MDTypography variant="h5">
+                  {result.prediction === 1
+                    ? "Some cognitive skills may need support"
+                    : "Cognitive skills look on track"}
+                </MDTypography>
+                <MDTypography variant="body2">
+                  Likelihood of autism-related cognitive differences:{" "}
+                  <b>{result.probability_autism}%</b>
+                </MDTypography>
+              </MDBox>
+              <MDTypography variant="h6" mb={1}>
+                Performance levels
+              </MDTypography>
+              {Object.entries(result.levels).map(([k, v]) => (
+                <MDBox
+                  key={k}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  mb={1}
+                >
+                  <MDTypography variant="button" sx={{ textTransform: "capitalize" }}>
+                    {k === "logic" ? "Logical thinking" : k}
+                  </MDTypography>
+                  <MDBox display="flex" alignItems="center" gap={1}>
+                    <Chip size="small" label={v} color={LEVEL_COLOR[v]} />
+                    {v !== "Good" && (
+                      <MDButton
+                        size="small"
+                        variant="text"
+                        color="primary"
+                        onClick={() => go(SUGGEST[k])}
+                      >
+                        Practise
+                      </MDButton>
+                    )}
+                  </MDBox>
+                </MDBox>
+              ))}
+              {low.length > 0 && (
+                <Alert severity="warning" sx={{ mt: 1, fontSize: "0.85rem" }}>
+                  Your child may find {low.join(" & ")} challenging. Regular play with the suggested
+                  activities can help.
+                </Alert>
+              )}
+              <MDButton
+                variant="gradient"
+                color="primary"
+                sx={{ mt: 2 }}
+                onClick={() => go("activities")}
+              >
+                All suggested activities
+              </MDButton>
+            </MDBox>
+          ) : (
+            <MDTypography variant="body2" color="text">
+              Press <b>Analyse</b> to get the cognitive profile.
+            </MDTypography>
+          )}
+        </Grid>
+      </Grid>
+      {history.length > 1 && (
+        <MDBox mt={4}>
+          <MDTypography variant="h6">Progress across sessions</MDTypography>
+          <MDBox height={260} mt={1}>
+            <ResponsiveContainer>
+              <LineChart
+                data={history.map((h) => ({
+                  date: new Date(h.createdAt).toLocaleDateString(),
+                  Attention: h.attentionScore,
+                  Memory: h.memoryScore,
+                  Logic: h.score,
+                }))}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Legend />
+                <Line dataKey="Attention" stroke="#f97316" />
+                <Line dataKey="Memory" stroke="#22c55e" />
+                <Line dataKey="Logic" stroke="#6366f1" />
+              </LineChart>
+            </ResponsiveContainer>
+          </MDBox>
+        </MDBox>
+      )}
+      <Disclaimer />
+    </MDBox>
   );
-};
-
-const styles = {
-  resultImage: {
-    marginTop: "0px",
-    textAlign: "center",
-  },
-  image: {
-    width: "1000px",
-    height: "500px",
-    display: "block",
-    margin: "0 auto",
-  },
-  cButton: {
-    backgroundColor: "#16244d",
-    color: "white",
-    padding: "10px 20px",
-    borderRadius: "5px",
-    fontSize: "16px",
-    cursor: "pointer",
-    border: "none",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-    transition: "background-color 0.3s",
-  },
-  lowLevelButton: {
-    backgroundColor: "#FF6347", // Red color for low-level skill buttons
-    color: "white",
-    padding: "10px 20px",
-    borderRadius: "5px",
-    fontSize: "16px",
-    cursor: "pointer",
-    border: "none",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-    transition: "background-color 0.3s",
-  },
-};
-
-export default AllResults;
+}
+AllResults.propTypes = { go: PropTypes.func.isRequired };

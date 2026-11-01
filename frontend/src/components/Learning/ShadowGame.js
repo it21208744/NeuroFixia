@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import * as XLSX from "xlsx";
 import "./ShadowGame.css";
-import { useNavigate } from "react-router-dom";
 import { DataContext } from "layouts/Learning";
-import { timeToFirstGaze, countTimesOutsideArea } from "./webgazerFunctions";
+import { timeToFirstGaze, countGazeShifts } from "./gazeMetrics";
+import { startGaze, stopGaze } from "utils/webgazer";
+import { cameraErrorMessage } from "utils/media";
+import Calibration from "components/Behavioral/Calibration";
 
 import correctSound from "../../components/Cognitive/correctselect.mp3";
 import wrongSound from "../../components/Cognitive/wrongselect.mp3";
@@ -162,68 +164,94 @@ const patterns = [
 ];
 
 const ShadowGame = () => {
-  // 2. webgazer intialized in window
-  const webgazer = window.webgazer;
   const {
     shadowScore,
     setShadowScore,
-    timeElapsed,
-    setTimeElapsed,
     completedPatterns,
     setCompletedPatterns,
-    gazeShiftsCount,
     setGazeShiftsCount,
-    fixationDuration,
     setFixationDuration,
-    gazeDataCollection,
-    setGazeDataCollection,
+    markDone,
   } = useContext(DataContext);
-  const navigate = useNavigate();
   const [currentPattern, setCurrentPattern] = useState(0);
   const [feed, setFeed] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
+  const [phase, setPhase] = useState("intro"); // intro | calibrate | playing | done
+  const [timeElapsed, setTimeElapsed] = useState(0);
+  const [gazeError, setGazeError] = useState("");
+  const samples = useRef([]);
+  const roundStart = useRef(0);
+  const firstGazeTimes = useRef([]);
+  const shifts = useRef(0);
+  const targetRef = useRef(null);
 
-  // 3. Collect gaze data continuously while the game is running (Collect Gaze Data During the Game)
+  // stop eye tracking when leaving the game
+  useEffect(() => () => stopGaze(), []);
+
   useEffect(() => {
-    const listener = (data, elapsedTime) => {
-      if (data) {
-        setGazeDataCollection((prev) => [
-          ...prev,
-          { x: data.x, y: data.y, time: elapsedTime / 1000 },
-        ]);
-      }
-    };
-
-    webgazer
-      .setGazeListener(listener)
-      .setRegression("ridge") // 'weightedRidge' 'threadedRidge'
-      .showVideo(false);
-
-    webgazer
-      .showPredictionPoints(true)
-      .begin()
-      .then(() => console.log("WebGazer initialized"));
-
-    return () => {
-      webgazer.clearGazeListener();
-    };
-    setGazeDataCollection([]);
-    const timer = setInterval(() => {
-      setTimeElapsed((prev) => prev + 1);
-    }, 1000);
-
+    if (phase !== "playing") return undefined;
+    const timer = setInterval(() => setTimeElapsed((t) => t + 1), 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [phase]);
+
+  const startEyeTracking = async () => {
+    setGazeError("");
+    try {
+      await startGaze(
+        (data) => {
+          if (data) samples.current.push({ x: data.x, y: data.y, t: performance.now() });
+        },
+        { showVideo: true }
+      );
+      setPhase("calibrate");
+    } catch (e) {
+      setGazeError(`${cameraErrorMessage(e)} You can still play without eye tracking.`);
+    }
+  };
+
+  const beginGame = () => {
+    window.webgazer?.showVideoPreview(false).showPredictionPoints(false);
+    setShadowScore(100);
+    setCompletedPatterns([]);
+    setCurrentPattern(0);
+    setTimeElapsed(0);
+    samples.current = [];
+    firstGazeTimes.current = [];
+    shifts.current = 0;
+    roundStart.current = performance.now();
+    setPhase("playing");
+  };
+
+  const closeRoundGaze = () => {
+    const rect = targetRef.current?.getBoundingClientRect();
+    if (rect && samples.current.length) {
+      const ttf = timeToFirstGaze(samples.current, rect, roundStart.current);
+      if (ttf !== null) firstGazeTimes.current.push(ttf);
+      shifts.current += countGazeShifts(samples.current, rect);
+    }
+    samples.current = [];
+    roundStart.current = performance.now();
+  };
+
+  const endGame = () => {
+    stopGaze();
+    const avgFirst = firstGazeTimes.current.length
+      ? firstGazeTimes.current.reduce((a, b) => a + b, 0) / firstGazeTimes.current.length
+      : 0;
+    setGazeShiftsCount(shifts.current);
+    setFixationDuration(Number(avgFirst.toFixed(2)));
+    markDone("attention");
+    setPhase("done");
+  };
 
   const handleClick = (index) => {
+    if (isDisabled) return;
     setIsDisabled(true);
+    closeRoundGaze();
     const isCorrect = index === patterns[currentPattern].correctIndex;
-    setFeed(isCorrect ? "You are correct!" : "You are wrong!");
-
-    const audio = new Audio(isCorrect ? correctSound : wrongSound);
-    audio.play();
-
-    if (!isCorrect) setShadowScore((prevScore) => prevScore - 10);
+    setFeed(isCorrect ? "You are correct!" : "Oops, try the next one!");
+    new Audio(isCorrect ? correctSound : wrongSound).play().catch(() => {});
+    if (!isCorrect) setShadowScore((prevScore) => Math.max(0, prevScore - 10));
 
     setTimeout(() => {
       setFeed("");
@@ -231,39 +259,62 @@ const ShadowGame = () => {
       setCompletedPatterns((prev) => [...prev, currentPattern + 1]);
       if (currentPattern < patterns.length - 1) {
         setCurrentPattern((prev) => prev + 1);
+        roundStart.current = performance.now();
       } else {
-        // End game after answering 10 questions
         endGame();
       }
-    }, 1500);
+    }, 1200);
   };
 
-  const endGame = () => {
-    alert(`Game over! Final Score: ${shadowScore}`);
-
-    // 4.Analyze Gaze Data at the End of the Game
-    setGazeShiftsCount(countTimesOutsideArea(gazeDataCollection));
-    setFixationDuration((timeToFirstGaze(gazeDataCollection) / 1000).toFixed(2)); // Convert ms to seconds
-  };
-
-  const handleSubmit = () => {
-    webgazer.pause(); // // 5. Stop gaze tracking
-
+  const exportResults = () => {
     const data = [
       {
         Attention_Score: shadowScore,
         "Time Elapsed (seconds)": timeElapsed,
         "Patterns Completed": completedPatterns.length,
-        Gaze_Shifts_Count: gazeShiftsCount,
-        "Fixation_Duration (s)": parseFloat(fixationDuration).toFixed(2), // Ensure it's in 2 decimal points (Already converted to seconds)
       },
     ];
-
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Shadow Game Results");
     XLSX.writeFile(workbook, "Shadow_Game_Results.xlsx");
   };
+
+  if (phase === "intro")
+    return (
+      <div className="shadow-game" style={{ textAlign: "center", padding: 24 }}>
+        <h1>Shadow Matching Game</h1>
+        <p style={{ maxWidth: 560, margin: "12px auto" }}>
+          Your child finds the shadow that matches the picture. The webcam follows where they look
+          to measure attention - first a quick 9-dot calibration.
+        </p>
+        {gazeError && <p style={{ color: "#c62828" }}>{gazeError}</p>}
+        <button className="submit-button" onClick={startEyeTracking}>
+          Start with eye tracking
+        </button>{" "}
+        <button className="submit-button" style={{ background: "#64748b" }} onClick={beginGame}>
+          Play without eye tracking
+        </button>
+      </div>
+    );
+
+  if (phase === "calibrate") return <Calibration onDone={beginGame} />;
+
+  if (phase === "done")
+    return (
+      <div className="shadow-game" style={{ textAlign: "center", padding: 24 }}>
+        <h1>🎉 Well done!</h1>
+        <h3>
+          Attention score: {shadowScore} / 100 · {timeElapsed} seconds
+        </h3>
+        <button className="submit-button" onClick={exportResults}>
+          Download results
+        </button>{" "}
+        <button className="submit-button" onClick={() => setPhase("intro")}>
+          Play again
+        </button>
+      </div>
+    );
 
   const { original, shadows } = patterns[currentPattern];
 
@@ -274,14 +325,14 @@ const ShadowGame = () => {
       </div>
       <div className="ab">
         <div>Score: {shadowScore}</div>
-        <div>Time Elapsed: {timeElapsed} seconds</div>
+        <div>Time: {timeElapsed}s</div>
       </div>
 
       {feed && <div className="feed">{feed}</div>}
 
       {/* Display Original Image Above the Grid */}
       <div className="original-container">
-        <img src={original} alt="Original Object" className="original-image" />
+        <img ref={targetRef} src={original} alt="Original Object" className="original-image" />
       </div>
       <div className="game-container">
         <div className="game-area">
@@ -308,9 +359,6 @@ const ShadowGame = () => {
               </div>
             ))}
           </div>
-          <button className="submit-button" onClick={handleSubmit}>
-            Submit and Download Results
-          </button>
         </div>
       </div>
 
